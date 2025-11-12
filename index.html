@@ -475,9 +475,58 @@
           restoreInputState(snap);
           recalc(); msg.textContent=`Loaded ${Object.keys(parsed.timestamps).length} RPM(s) with timestamps.`;
         } else {
-          // Legacy or no timestamps: accept partial durations overlay
+          // Legacy or no timestamps: detect and add missing RPM columns
+          const snapshot = captureInputState();
+          const incomingRpms = new Set();
+          const invalidRpms = [];
+          
+          // Scan all durations for unique RPMs
+          for(const d of parsed.durations){
+            if(d && d.rpm && Number.isFinite(d.rpm)){
+              incomingRpms.add(d.rpm);
+            }
+          }
+          
+          // Check which RPMs are missing and validate them
+          const missingRpms = [];
+          for(const rpm of Array.from(incomingRpms)){
+            if(!rpmWobs.has(rpm)){
+              const wobs = allowedWobsForRpm(rpm);
+              if(wobs.length === 0){
+                invalidRpms.push(rpm);
+              } else {
+                missingRpms.push(rpm);
+              }
+            }
+          }
+          
+          // Report invalid RPMs that violate constraint
+          if(invalidRpms.length){
+            msg.textContent = `Cannot import: RPMs ${invalidRpms.join(', ')} violate WOB×RPM<9000 constraint.`;
+            evt.target.value='';
+            return;
+          }
+          
+          // Add missing valid RPMs
+          if(missingRpms.length){
+            for(const rpm of missingRpms){
+              rpmWobs.set(rpm, allowedWobsForRpm(rpm));
+            }
+            renderHeaders();
+            renderInputTable();
+            renderCalcTable();
+            restoreInputState(filterSnapshot(snapshot, rpmWobs));
+          }
+          
+          // Now apply the imported durations
           applyImportedDurations(parsed.durations);
-          msg.textContent='Imported durations only (no timestamps). Timestamps remain empty.';
+          
+          // Enhanced feedback message
+          if(missingRpms.length){
+            msg.textContent = `Added ${missingRpms.length} new RPM column(s): ${missingRpms.sort((a,b)=>a-b).join(', ')}. Imported durations (no timestamps).`;
+          } else {
+            msg.textContent = 'Imported durations only (no timestamps). Timestamps remain empty.';
+          }
         }
       }catch(err){ msg.textContent='Import error: '+(err&&err.message?err.message:String(err)); }
       finally{ evt.target.value=''; }
