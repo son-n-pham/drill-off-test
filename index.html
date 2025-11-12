@@ -173,51 +173,36 @@
       <li>Finalize RPM between two fastest ROPs.</li>
     </ol>
     <hr style="border:0; border-top:1px solid var(--grid); margin:12px 0" />
-    <div id="active-seed" class="summary" style="grid-template-columns:repeat(4,minmax(0,1fr)); margin-bottom:12px">
+    <div id="active-seed" class="summary" style="grid-template-columns:repeat(3,minmax(0,1fr)); margin-bottom:12px">
       <div class="card"><div class="lbl">Optimum RPM</div><div class="num" id="a-seed-rpm">–</div></div>
       <div class="card"><div class="lbl">WOB Low (klbf)</div><div class="num" id="a-seed-wob-low">–</div></div>
       <div class="card"><div class="lbl">WOB High (klbf)</div><div class="num" id="a-seed-wob-high">–</div></div>
-      <div class="card"><div class="lbl">Selected WOB</div><div class="num" id="a-selected-wob">–</div></div>
     </div>
-    <div class="controls" style="grid-template-columns:repeat(6,max-content); margin-bottom:14px">
+    <div class="controls" style="grid-template-columns:repeat(3,max-content); margin-bottom:14px">
       <label>ROP Unit
         <select id="ropUnit">
           <option value="m/hr" selected>m/hr</option>
           <option value="ft/hr">ft/hr</option>
         </select>
       </label>
-      <label>Countdown (min)
-        <select id="countdownMinutes">
-          <option value="5" selected>5</option>
-          <option value="3">3</option>
-          <option value="10">10</option>
-        </select>
+      <!-- WOB Step -->
+      <label>WOB Step (klbf)
+        <input type="number" id="wobStep" placeholder="WOB Step" min="0" step="1" value="3" />
       </label>
-      <button id="btn-countdown-start" type="button">Start countdown</button>
-      <button id="btn-countdown-reset" type="button">Reset</button>
-      <div id="countdownDisplay" class="tag" style="min-width:70px; text-align:center">5:00</div>
-      <div id="countdownStatus" class="note"></div>
+
+      <!-- Active WOB table (generated) -->
+      <div id="active-wob-table" style="overflow:auto; margin-bottom:12px"></div>
+      <div id="active-optwob-display" style="margin-bottom:12px">
+        <div class="card"><div class="lbl">Optimum WOB (klbf)</div><div class="num" id="a-seed-optwob">–</div></div>
+      </div>
+      <!-- Optimum RPM trials table: user will enter ROPs for Opt RPM and +/-5 -->
+      <div id="opt-rpm-trials-container" style="overflow:auto; margin-bottom:12px"></div>
+
+
+      <!-- Countdown and status removed -->
     </div>
-    <div id="active-wob-rops" style="margin-bottom:14px; display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px">
-      <label>Low WOB ROP <input id="rop-low" type="number" min="0" step="0.1" disabled /></label>
-      <label>High WOB ROP <input id="rop-high" type="number" min="0" step="0.1" disabled /></label>
-      <button id="btn-select-wob" type="button" disabled>Select WOB</button>
-      <div id="wobSelectionMsg" class="note" style="grid-column:1/-1"></div>
-    </div>
-    <h3 style="margin:0 0 8px">RPM Trials</h3>
-    <p class="note" id="rpmTrialsHint">Add ROP values after each countdown completes.</p>
-    <div class="btns" style="margin-bottom:8px">
-      <input type="number" id="trial-rpm" placeholder="RPM" min="1" step="1" style="width:100px" />
-      <button id="btn-add-trial" type="button">Add RPM Trial</button>
-    </div>
-    <div style="overflow:auto; margin-bottom:12px">
-      <table class="grid" id="active-rpm-trials">
-        <thead><tr><th>RPM</th><th>ROP (<span id="rop-unit-label">m/hr</span>)</th><th>Countdown</th><th>Remove</th></tr></thead>
-        <tbody id="tbody-active-trials"></tbody>
-      </table>
-    </div>
-    <button id="btn-finalize-active" type="button" disabled>Finalize Active RPM</button>
-    <div id="active-final-summary" class="note" style="margin-top:10px"></div>
+    <div id="active-wob-rops" style="margin-bottom:14px; display:none"></div>
+    <!-- RPM Trials section removed -->
   </section>
 
   <section class="footer">
@@ -371,7 +356,9 @@
     countdownTimer:null,
     ropUnit:'m/hr',
     rpmTrials:[], // {rpm, rop:null, countdownEnd:null, timer:null, elRow}
-    finalRpm:null
+    finalRpm:null,
+    // per-WOB ROP map: { '<wob>': <rop> }
+    wobRops: {}
   };
 
   function updateActiveSeed(){
@@ -386,8 +373,121 @@
     document.getElementById('a-seed-rpm').textContent = String(activeState.optRpm);
     document.getElementById('a-seed-wob-low').textContent = String(activeState.wobLow);
     document.getElementById('a-seed-wob-high').textContent = String(activeState.wobHigh);
+    // Selected WOB input removed from UI — set a sensible default if not already set
+    if(!Number.isFinite(activeState.selectedWob)){
+      activeState.selectedWob = activeState.wobLow;
+    }
     if(!activeState.initialized){ initActiveTrials(); activeState.initialized=true; }
     refreshFinalizeState();
+    // Build or refresh Active WOB table and Opt RPM trials whenever the seed updates
+    try{ renderActiveWobTable(); }catch(e){}
+    try{ renderOptimumRpmTrialsTable(); }catch(e){}
+  }
+
+  // Render Active WOB table based on activeState.wobLow, wobHigh, optRpm and #wobStep
+  function renderActiveWobTable(){
+    const container = document.getElementById('active-wob-table'); if(!container) return;
+    // Preserve existing values
+    const existing = {};
+    container.querySelectorAll && container.querySelectorAll('[data-wob]').forEach(el=>{ const w = el.getAttribute('data-wob'); if(w){ const v = el.value; if(v!=='') existing[w]=v; } });
+
+    const opt = Number(activeState.optRpm);
+    const low = Number(activeState.wobLow);
+    const high = Number(activeState.wobHigh);
+    let step = Number(document.getElementById('wobStep').value);
+    if(!Number.isFinite(step) || step<=0) step = 3;
+    // Clear if missing data
+    if(!Number.isFinite(opt) || !Number.isFinite(low) || !Number.isFinite(high)){
+      container.innerHTML = '';
+      return;
+    }
+
+    // Ensure low <= high
+    let start = low, end = high; if(start> end){ start = high; end = low; }
+
+    const columns = [];
+    // Build stepped columns starting at `start` and continue until value >= end.
+    const roundVal = v => Math.round(v*1000)/1000;
+    let v = roundVal(start);
+    let safety = 0;
+    // Only include WOB values where wob * optRpm < 9000. Stop when a stepped wob would violate the constraint.
+    while(safety < 500){
+      // If this wob violates wob * rpm < 9000, break (larger wobs will also violate)
+      if(!(v * opt < 9000)) break;
+      columns.push(v);
+      if(v >= end) break;
+      v = roundVal(v + step);
+      safety++;
+    }
+    if(columns.length === 0){
+      container.innerHTML = '<div class="note">No acceptable WOB values (WOB × RPM must be &lt; 9000).</div>';
+      return;
+    }
+
+    // Build table
+    const tbl = document.createElement('table'); tbl.className='grid'; tbl.id='tbl-active-wob';
+    const thead = document.createElement('thead'); const trh = document.createElement('tr');
+    const th0 = document.createElement('th'); th0.textContent='Optimum RPM'; trh.appendChild(th0);
+    for(const wob of columns){ const th = document.createElement('th'); th.textContent = `${wob} klbf`; trh.appendChild(th); }
+    thead.appendChild(trh); tbl.appendChild(thead);
+
+    const tbody = document.createElement('tbody'); const tr = document.createElement('tr');
+    const tdRpm = document.createElement('th'); tdRpm.className='rowhdr'; tdRpm.textContent = String(opt); tr.appendChild(tdRpm);
+    for(const wob of columns){ const td = document.createElement('td');
+      const inp = document.createElement('input'); inp.type='number'; inp.step='0.1'; inp.placeholder='ROP'; inp.setAttribute('data-wob', String(wob)); inp.id=`awob_${wob}`;
+      // restore from activeState.wobRops or preserved existing values
+      if(Object.prototype.hasOwnProperty.call(activeState.wobRops, wob)) inp.value = activeState.wobRops[wob];
+      else if(existing[String(wob)]) inp.value = existing[String(wob)];
+      inp.addEventListener('change', ()=>{ const val = inp.value; if(val===''||!Number.isFinite(Number(val))){ delete activeState.wobRops[wob]; } else { activeState.wobRops[wob]=Number(val); } refreshFinalizeState(); computeOptimumWobFromTable(); });
+      td.appendChild(inp); tr.appendChild(td);
+    }
+    tbody.appendChild(tr); tbl.appendChild(tbody);
+
+    // Replace container contents
+    container.innerHTML=''; container.appendChild(tbl);
+
+    // Update optimum WOB after rendering table
+    try{ computeOptimumWobFromTable(); }catch(e){}
+  }
+
+  // Render a small table for Optimum RPM trials: Opt RPM, Opt-5, Opt+5
+  function renderOptimumRpmTrialsTable(){
+    const container = document.getElementById('opt-rpm-trials-container'); if(!container) return;
+    container.innerHTML = '';
+    const opt = Number(activeState.optRpm);
+    if(!Number.isFinite(opt)) return;
+    const rpms = [opt-5, opt, opt+5].filter(r=>r>0).map(r=>Math.round(r));
+
+    const tbl = document.createElement('table'); tbl.className='grid';
+    const thead = document.createElement('thead'); const trh=document.createElement('tr'); trh.appendChild(document.createElement('th'));
+    for(const r of rpms){ const th=document.createElement('th'); th.textContent = `${r} RPM`; trh.appendChild(th); }
+    thead.appendChild(trh); tbl.appendChild(thead);
+
+    const tbody=document.createElement('tbody'); const tr=document.createElement('tr'); const th0=document.createElement('th'); th0.className='rowhdr'; th0.textContent = `${activeState.selectedWob||'WOB'}`; tr.appendChild(th0);
+    for(const r of rpms){ const td=document.createElement('td'); const inp=document.createElement('input'); inp.type='number'; inp.step='0.1'; inp.placeholder='ROP'; inp.id=`opt_r_${r}`;
+      // Restore if present in activeState.optTrials
+      if(activeState.optTrials && activeState.optTrials[r]!==undefined) inp.value = activeState.optTrials[r];
+      inp.addEventListener('change', ()=>{ const v=inp.value; if(v===''||!Number.isFinite(Number(v))){ if(activeState.optTrials) delete activeState.optTrials[r]; } else { activeState.optTrials = activeState.optTrials || {}; activeState.optTrials[r]=Number(v); } refreshFinalizeState(); });
+      td.appendChild(inp); tr.appendChild(td);
+    }
+    tbody.appendChild(tr); tbl.appendChild(tbody);
+    container.appendChild(tbl);
+  }
+
+  // Compute optimum WOB by selecting the two ROPs that give the highest WOBs
+  function computeOptimumWobFromTable(){
+    // activeState.wobRops: { wob: rop }
+    const entries = Object.keys(activeState.wobRops).map(k=>({wob:Number(k), rop:Number(activeState.wobRops[k])})).filter(e=>Number.isFinite(e.wob) && Number.isFinite(e.rop));
+    if(entries.length < 2){ document.getElementById('a-seed-optwob').textContent='–'; return null; }
+    // We need to select the two ROPs which give the highest WOB — interpreted as pick the two entries with highest ROP values,
+    // then compute optimum WOB as average of their WOBs.
+    entries.sort((a,b)=>b.rop - a.rop);
+    const top = entries.slice(0,2);
+    const opt = (top[0].wob + top[1].wob)/2;
+    const rounded = Math.round(opt*100)/100;
+    activeState.selectedWob = rounded;
+    document.getElementById('a-seed-optwob').textContent = String(rounded);
+    return rounded;
   }
 
   function initActiveTrials(){
@@ -400,6 +500,7 @@
   function addTrialRow(rpm){
     if(activeState.rpmTrials.some(t=>t.rpm===rpm)) return; // avoid duplicates
     const tbody=document.getElementById('tbody-active-trials');
+    if(!tbody) return; // RPM Trials UI removed — no-op
     const tr=document.createElement('tr'); tr.dataset.rpm=String(rpm);
     const tdRpm=document.createElement('td'); tdRpm.textContent=String(rpm); tr.appendChild(tdRpm);
     const tdRop=document.createElement('td');
@@ -427,63 +528,50 @@
     trial.timer=setInterval(tick,1000); tick();
   }
 
-  // Global countdown for WOB ROP capture
-  function startGlobalCountdown(){
-    clearGlobalCountdown();
-    const minutes = activeState.countdownMinutes;
-    activeState.countdownEnd = Date.now() + minutes*60000;
-    document.getElementById('countdownStatus').textContent='Countdown running…';
-    document.getElementById('btn-countdown-start').disabled=true;
-    document.getElementById('btn-countdown-reset').disabled=false;
-    const lowInp=document.getElementById('rop-low'); const highInp=document.getElementById('rop-high');
-    lowInp.disabled=true; highInp.disabled=true; document.getElementById('btn-select-wob').disabled=true;
-    const tick=()=>{
-      const remain = activeState.countdownEnd - Date.now();
-      if(remain<=0){ clearGlobalCountdown(); document.getElementById('countdownDisplay').textContent='0:00'; document.getElementById('countdownStatus').textContent='Countdown complete. Enter ROPs.'; lowInp.disabled=false; highInp.disabled=false; document.getElementById('btn-select-wob').disabled=false; return; }
-      const sec=Math.ceil(remain/1000); const m=Math.floor(sec/60); const s=String(sec%60).padStart(2,'0');
-      document.getElementById('countdownDisplay').textContent=`${m}:${s}`;
-    };
-    activeState.countdownTimer=setInterval(tick,1000); tick();
-  }
-  function clearGlobalCountdown(){ if(activeState.countdownTimer){ clearInterval(activeState.countdownTimer); activeState.countdownTimer=null; } document.getElementById('btn-countdown-start').disabled=false; }
-
-  function selectActiveWob(){
-    const lowVal=Number(document.getElementById('rop-low').value); const highVal=Number(document.getElementById('rop-high').value);
-    if(!Number.isFinite(lowVal) || !Number.isFinite(highVal)){ document.getElementById('wobSelectionMsg').textContent='Enter both ROP values.'; return; }
-    activeState.ropLow=lowVal; activeState.ropHigh=highVal;
-    let chosen = null; if(lowVal>highVal) chosen=activeState.wobLow; else if(highVal>lowVal) chosen=activeState.wobHigh; else chosen = Math.round((activeState.wobLow+activeState.wobHigh)/2);
-    activeState.selectedWob=chosen; document.getElementById('a-selected-wob').textContent=String(chosen); document.getElementById('wobSelectionMsg').textContent=`Selected WOB: ${chosen} klbf`;
-    // Enable RPM trial ROP inputs via their own countdown buttons (already allowed)
-    refreshFinalizeState();
-  }
+  // Global WOB selection and countdown removed — Active seed will use passive results
 
   function refreshFinalizeState(){
     // Update unit labels
-    document.getElementById('rop-unit-label').textContent=activeState.ropUnit;
-    document.getElementById('active-unit-label-seed').textContent=activeState.ropUnit;
+    const ropLabelEl = document.getElementById('rop-unit-label');
+    if(ropLabelEl) ropLabelEl.textContent = activeState.ropUnit;
+    const activeSeedLabelEl = document.getElementById('active-unit-label-seed');
+    if(activeSeedLabelEl) activeSeedLabelEl.textContent = activeState.ropUnit;
     // Button enable conditions
     const finalizeBtn=document.getElementById('btn-finalize-active');
     const trialsWithRop = activeState.rpmTrials.filter(t=>Number.isFinite(t.rop));
-    finalizeBtn.disabled = trialsWithRop.length < 2 || !activeState.selectedWob;
+    // Require at least two trials with ROP; Selected WOB removed from UI so don't require it here
+    if(finalizeBtn) finalizeBtn.disabled = trialsWithRop.length < 2;
   }
 
   function finalizeActiveRpm(){
     const data = activeState.rpmTrials.filter(t=>Number.isFinite(t.rop));
-    if(data.length<2){ document.getElementById('active-final-summary').textContent='Need at least two ROP trials.'; return; }
+    if(data.length<2){ const el=document.getElementById('active-final-summary'); if(el) el.textContent='Need at least two ROP trials.'; return; }
     data.sort((a,b)=>b.rop-a.rop); const top=data.slice(0,2);
     const final = Math.round((top[0].rpm + top[1].rpm)/2);
     activeState.finalRpm=final;
-    document.getElementById('active-final-summary').textContent=`Fastest trials RPMs: ${top[0].rpm} (${top[0].rop} ${activeState.ropUnit}), ${top[1].rpm} (${top[1].rop} ${activeState.ropUnit}). Final RPM: ${final}`;
+    const outEl=document.getElementById('active-final-summary'); if(outEl) outEl.textContent=`Fastest trials RPMs: ${top[0].rpm} (${top[0].rop} ${activeState.ropUnit}), ${top[1].rpm} (${top[1].rop} ${activeState.ropUnit}). Final RPM: ${final}`;
   }
 
   // ===== ACTIVE UI EVENT BINDINGS =====
   document.getElementById('ropUnit').addEventListener('change', e=>{ activeState.ropUnit=e.target.value; refreshFinalizeState(); });
-  document.getElementById('countdownMinutes').addEventListener('change', e=>{ activeState.countdownMinutes=Number(e.target.value); if(!activeState.countdownTimer){ document.getElementById('countdownDisplay').textContent=e.target.value+':00'; } });
-  document.getElementById('btn-countdown-start').addEventListener('click', startGlobalCountdown);
-  document.getElementById('btn-countdown-reset').addEventListener('click', ()=>{ clearGlobalCountdown(); document.getElementById('countdownDisplay').textContent=activeState.countdownMinutes+':00'; document.getElementById('countdownStatus').textContent=''; const lowInp=document.getElementById('rop-low'); const highInp=document.getElementById('rop-high'); lowInp.disabled=true; highInp.disabled=true; document.getElementById('btn-select-wob').disabled=true; });
-  document.getElementById('btn-select-wob').addEventListener('click', selectActiveWob);
-  document.getElementById('btn-add-trial').addEventListener('click', ()=>{ const v=Number(document.getElementById('trial-rpm').value); if(!Number.isFinite(v)||v<=0){ document.getElementById('rpmTrialsHint').textContent='Enter valid RPM to add.'; return; } addTrialRow(v); document.getElementById('trial-rpm').value=''; refreshFinalizeState(); });
-  document.getElementById('btn-finalize-active').addEventListener('click', finalizeActiveRpm);
+  // Countdown and select WOB controls removed; no listeners required
+  const btnAddTrial = document.getElementById('btn-add-trial');
+  if(btnAddTrial){
+    btnAddTrial.addEventListener('click', ()=>{
+      const trialInput = document.getElementById('trial-rpm');
+      const hintEl = document.getElementById('rpmTrialsHint');
+      const v = Number(trialInput ? trialInput.value : NaN);
+      if(!Number.isFinite(v)||v<=0){ if(hintEl) hintEl.textContent='Enter valid RPM to add.'; return; }
+      addTrialRow(v);
+      if(trialInput) trialInput.value='';
+      refreshFinalizeState();
+    });
+  }
+  const btnFinalizeActive = document.getElementById('btn-finalize-active');
+  if(btnFinalizeActive) btnFinalizeActive.addEventListener('click', finalizeActiveRpm);
+
+  // WOB Step change should re-render the Active WOB table
+  document.getElementById('wobStep').addEventListener('change', ()=>{ try{ renderActiveWobTable(); }catch(e){} });
 
   // Hook passive recalc to seed active
   const originalRecalc = recalc;
@@ -758,6 +846,10 @@
 
   // Initial render
   renderHeaders(); renderInputTable(); renderCalcTable(); recalc();
+
+  // Initial active WOB table render
+  try{ renderActiveWobTable(); }catch(e){}
+  try{ renderOptimumRpmTrialsTable(); }catch(e){}
 })();
 </script>
 </body>
