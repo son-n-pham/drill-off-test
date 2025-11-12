@@ -354,7 +354,9 @@
   function renderCalcTable(){ tbodyCalc.innerHTML=''; for(const label of rangeUniverse()){ const [hi,lo]=label.split('-').map(Number); const tr=document.createElement('tr'); const th=document.createElement('th'); th.className='rowhdr'; th.textContent=`${hi} - ${lo}`; tr.appendChild(th); for(const rpm of allRpms()){ const td=document.createElement('td'); td.id=cellId(hi,lo,rpm); tr.appendChild(td);} tbodyCalc.appendChild(tr);} updateEmptyStates(); }
 
   function recalc(){ document.querySelectorAll('.colMin, .globalMin').forEach(el=>el.classList.remove('colMin','globalMin')); const durations=[]; for(const rpm of allRpms()){ const wobs=rpmWobs.get(rpm)||[]; let rpmMin={val:Infinity, cell:null}; for(let i=0;i<wobs.length-1;i++){ const hi=wobs[i], lo=wobs[i+1]; const tHi=parseDT((document.getElementById(inputId(rpm, hi))||{}).value); const tLo=parseDT((document.getElementById(inputId(rpm, lo))||{}).value); const td=document.getElementById(cellId(hi, lo, rpm)); let val=''; if(Number.isFinite(tHi)&&Number.isFinite(tLo)){ const diff=tLo-tHi; if(diff>=0){ val=diff; if(diff<rpmMin.val){ rpmMin={val:diff, cell:td}; } durations.push({rpm, range:`${hi}-${lo}`, seconds:diff}); } else { val='Invalid (negative)'; } } if(td) td.textContent= typeof val==='number'? formatSec(val) : val; } if(rpmMin.cell) rpmMin.cell.classList.add('colMin'); }
-    const minTime=document.getElementById('min-time'); const minRpm=document.getElementById('min-rpm'); const minRange=document.getElementById('min-range'); const valid=durations.filter(d=>Number.isFinite(d.seconds)); if(valid.length){ valid.sort((a,b)=>a.seconds-b.seconds); const best=valid[0]; minTime.textContent=formatSec(best.seconds); minRpm.textContent=String(best.rpm); minRange.textContent=best.range.replace('-', ' - '); const bestCell=document.getElementById(`d_${best.range.replace('-','_')}_${best.rpm}`); if(bestCell) bestCell.classList.add('globalMin'); } else { minTime.textContent='–'; minRpm.textContent='–'; minRange.textContent='–'; } updateEmptyStates(); return durations; }
+    const minTime=document.getElementById('min-time'); const minRpm=document.getElementById('min-rpm'); const minRange=document.getElementById('min-range'); const valid=durations.filter(d=>Number.isFinite(d.seconds)); if(valid.length){ valid.sort((a,b)=>a.seconds-b.seconds); const best=valid[0]; minTime.textContent=formatSec(best.seconds); minRpm.textContent=String(best.rpm); minRange.textContent=best.range.replace('-', ' - '); const bestCell=document.getElementById(`d_${best.range.replace('-','_')}_${best.rpm}`); if(bestCell) bestCell.classList.add('globalMin'); } else { minTime.textContent='–'; minRpm.textContent='–'; minRange.textContent='–'; } updateEmptyStates(); // propagate passive results into Active seed
+    try{ updateActiveSeed(); }catch(e){}
+    return durations; }
   // ===== ACTIVE TEST STATE & HELPERS =====
   const activeState = {
     initialized:false,
@@ -662,6 +664,8 @@
     }
     if(valid.length){ valid.sort((a,b)=>a.seconds-b.seconds); const best=valid[0]; document.getElementById('min-time').textContent=formatSec(best.seconds); document.getElementById('min-rpm').textContent=String(best.rpm); document.getElementById('min-range').textContent=best.range.replace('-',' - '); const bestCell=document.getElementById(`d_${best.range.replace('-','_')}_${best.rpm}`); if(bestCell) bestCell.classList.add('globalMin'); }
     else { document.getElementById('min-time').textContent='–'; document.getElementById('min-rpm').textContent='–'; document.getElementById('min-range').textContent='–'; }
+    // Propagate passive results into Active test UI after imported durations
+    try{ updateActiveSeed(); }catch(e){}
   }
 
   // Import handler
