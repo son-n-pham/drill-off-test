@@ -1,0 +1,55 @@
+# OS
+Thumbs.db
+.DS_Store
+
+# Windows image file caches
+ehthumbs.db
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Logs
+logs/
+*.log
+
+# Build
+dist/
+build/
+out/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+venv/
+env/
+/.venv
+
+# VSCode
+.vscode/
+
+# IDEs
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Misc
+.env
+.env.local
+.env.*.local
+.history
+.cache
+
+# Temporary files
+*~
+*.tmp
+*.swp
