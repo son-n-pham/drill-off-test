@@ -83,6 +83,8 @@
       }
       .grid th {
         background: color-mix(in oklab, var(--panel), white 4%);
+      }
+      .grid thead th {
         position: sticky;
         top: 0;
         z-index: 1;
@@ -152,7 +154,46 @@
         gap: 8px;
         flex-wrap: wrap;
         align-items: center;
+        margin: 8px 0 12px;
       }
+            header {
+              margin-bottom: 16px;
+            }
+            .section-divider {
+              border: 0;
+              border-top: 1px solid var(--grid);
+              margin: 16px 0;
+              height: 0;
+              background: none;
+            }
+            .table-wrap { overflow: auto; }
+            .mb-12 { margin-bottom: 12px; }
+            .full-span { grid-column: 1 / -1; }
+            .ml-8 { margin-left: 8px; }
+            .mt-8 { margin-top: 8px; }
+            .ml-20 { margin-left: 20px; }
+            .mb-14 { margin-bottom: 14px; }
+            .hidden { display: none; }
+            /* Improve controls responsiveness */
+            .controls {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+              gap: 8px 12px;
+              align-items: center;
+            }
+            /* Focus-visible improvements */
+            button:focus-visible,
+            .themebar select:focus-visible,
+            .themebar input[type="color"]:focus-visible,
+            .controls input:focus-visible {
+              outline: none;
+              border-color: var(--picker-focus-border);
+              box-shadow: var(--picker-focus-ring);
+            }
+            /* Mobile summary stacking */
+            @media (max-width: 640px) {
+              .summary { grid-template-columns: 1fr !important; }
+            }
       button {
         background: var(--btn);
         color: var(--text);
@@ -263,7 +304,7 @@
     </style>
   </head>
   <body>
-    <header style="margin-bottom: 10px">
+    <header>
       <h1>Drill‑Off Test <span class="tag">Interactive</span></h1>
       <div class="themebar">
         <label
@@ -291,10 +332,8 @@
         <button id="btn-theme-reset">Reset theme</button>
 
       </div>
-
-      <button id="btn-sample">Load sample data</button>
-
-      <div class="btns" style="margin: 8px 0 12px">
+      <div class="btns">
+        <button id="btn-sample">Load sample data</button>
         <button id="btn-clear">Clear all</button>
         <button id="btn-export">Download results (.csv)</button>
         <button id="btn-import" title="Load results from CSV">
@@ -306,12 +345,14 @@
           accept=".csv,text/csv"
           style="display: none"
         />
-        <div id="resultsMsg" class="note" style="margin-left: 8px"></div>
+        <div id="resultsMsg" class="note ml-8" aria-live="polite"></div>
       </div>
     </header>
 
-    <div id="passive-test">
-      <h2>Passive Drill‑Off Test</h1>
+    <hr class="section-divider" />
+
+    <div id="passive-test" role="region" aria-labelledby="passive-title">
+      <h2 id="passive-title">Passive Drill‑Off Test</h2>
       <section class="panel">
         <h2>Passive Setup: Add custom RPM column</h2>
         <div class="controls" style="margin: 8px 0 6px">
@@ -324,7 +365,7 @@
             step="1"
           />
           <button id="btn-add-col">Add column</button>
-          <div id="addMsg" class="note"></div>
+          <div id="addMsg" class="note" aria-live="polite"></div>
         </div>
         <div class="btns" style="margin-top: 6px">
           <button id="btn-reset">Reset to defaults</button>
@@ -396,20 +437,23 @@
             <div class="lbl">WOB Range (klbf)</div>
           </div>
         </div>
+        <div class="note" style="margin-top: 8px">Active test appears after passive minimum is calculated.</div>
       </section>
     </div>
 
+    <hr class="section-divider" />
+
 
     <!-- ACTIVE DRILL-OFF TEST SECTION -->
-    <div id="active-test">
-      <h2>Active Drill‑Off Test</h2>
+    <div id="active-test" role="region" aria-labelledby="active-title">
+      <h2 id="active-title">Active Drill‑Off Test</h2>
       <section class="panel" id="active-panel">
 
         <p class="note">
           Sequence continues from passive optimum RPM & WOB range. Follow steps
           below.
         </p>
-        <ol class="note" style="margin-left: 20px">
+        <ol class="note ml-20">
           <li>Seed optimum RPM and min/max WOB from passive test.</li>
           <li>
             Hold each WOB for countdown duration and record ROP (<span
@@ -423,16 +467,8 @@
           </li>
           <li>Finalize RPM between two fastest ROPs.</li>
         </ol>
-        <hr
-          style="border: 0; border-top: 1px solid var(--grid); margin: 12px 0"
-        />
-        <div
-          class="controls"
-          style="
-            grid-template-columns: repeat(3, max-content);
-            margin-bottom: 14px;
-          "
-        >
+        
+        <div class="controls">
           <!-- ROP Unit control removed -->
           <!-- WOB Step -->
           <label
@@ -448,10 +484,7 @@
           </label>
 
           <!-- Active WOB table (generated) -->
-          <div
-            id="active-wob-table"
-            style="overflow: auto; margin-bottom: 12px; grid-column: 1 / -1;"
-          ></div>
+          <div id="active-wob-table" class="table-wrap mb-12 full-span"></div>
 
           <label
             >RPM Step (rpm)
@@ -466,21 +499,15 @@
           </label>
 
           <!-- Optimum RPM trials table: user will enter ROPs for Opt RPM and +/-5 -->
-          <div
-            id="opt-rpm-trials-container"
-            style="overflow: auto; margin-bottom: 12px; grid-column: 1 / -1;"
-          ></div>
+          <div id="opt-rpm-trials-container" class="table-wrap mb-12 full-span"></div>
 
           
         </div>
-        <div
-          id="active-wob-rops"
-          style="margin-bottom: 14px; display: none"
-        ></div>
+        <div id="active-wob-rops" class="mb-14 hidden"></div>
         <!-- RPM Trials section removed -->
       </section>
 
-      <section class="panel" id="active-summary-panel" style="display: none;">
+      <section class="panel hidden" id="active-summary-panel">
         <h2>Active Test Results</h2>
         <div class="summary" id="active-summary">
           <div class="card">
