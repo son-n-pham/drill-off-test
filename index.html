@@ -736,6 +736,38 @@
           };
         }
 
+        // Helper to clear results message
+        function clearResultsMsg() {
+          const msg = document.getElementById("resultsMsg");
+          if (msg) msg.textContent = "";
+        }
+
+        // Auto-clear with timeout helper
+        function setResultsMsg(text, autoClearMs = 5000) {
+          const msg = document.getElementById("resultsMsg");
+          if (!msg) return;
+          msg.textContent = text;
+          if (autoClearMs > 0) {
+            setTimeout(clearResultsMsg, autoClearMs);
+          }
+        }
+
+        // Helper to clear add RPM message
+        function clearAddMsg() {
+          const msg = document.getElementById("addMsg");
+          if (msg) msg.textContent = "";
+        }
+
+        // Auto-clear with timeout helper for add RPM message
+        function setAddMsg(text, autoClearMs = 5000) {
+          const msg = document.getElementById("addMsg");
+          if (!msg) return;
+          msg.textContent = text;
+          if (autoClearMs > 0) {
+            setTimeout(clearAddMsg, autoClearMs);
+          }
+        }
+
         function loadSavedTheme() {
           const payload = localStorage.getItem("drilloff_theme");
           if (!payload) {
@@ -1695,6 +1727,7 @@
           msg.textContent = `Added RPM ${rpmVal}. Allowed WOB inputs (every 10 from max): ${wobs.join(
             ", "
           )}`;
+          setTimeout(clearAddMsg, 5000);
         }
         function removeRpm(rpm) {
           if (!rpmWobs.has(rpm)) return;
@@ -1728,6 +1761,7 @@
           recalc();
           document.getElementById("addMsg").textContent =
             "Reset to default RPMs.";
+          setTimeout(clearAddMsg, 5000);
         }
 
         // ===== SAVE / LOAD RPMs (timestamps cleared on load) =====
@@ -1752,6 +1786,7 @@
             a.click();
             URL.revokeObjectURL(a.href);
             msg.textContent = "Saved RPM list.";
+            setTimeout(clearAddMsg, 5000);
           } catch (err) {
             msg.textContent = "Save error: " + err.message;
           }
@@ -1815,6 +1850,7 @@
               renderCalcTable();
               // All timestamps cleared implicitly by re-render; recalc will just refresh summary
               recalc();
+              setTimeout(clearAddMsg, 5000);
             } catch (err) {
               msg.textContent =
                 "Load error: " +
@@ -2383,6 +2419,8 @@
                   } catch (e) {
                     console.error(e);
                   }
+                  // Auto-clear after 5 seconds
+                  setTimeout(clearResultsMsg, 5000);
                 } else {
                   // Legacy or no timestamps: detect and add missing RPM columns
                   const snapshot = captureInputState();
@@ -2451,6 +2489,8 @@
                     msg.textContent =
                       "Imported durations only (no timestamps). Timestamps remain empty.";
                   }
+                  // Auto-clear after 5 seconds
+                  setTimeout(clearResultsMsg, 5000);
                 }
               } catch (err) {
                 msg.textContent =
@@ -2475,6 +2515,24 @@
         document
           .getElementById("file-rpms")
           .addEventListener("change", loadRpmsFile);
+
+        // Clear results and add messages on any user interaction with main components
+        document.addEventListener("click", (e) => {
+          if (e.target.closest("button:not(#btn-import):not(#btn-export):not(#btn-save-rpms):not(#btn-load-rpms)") ||
+              e.target.closest("input") ||
+              e.target.closest("select")) {
+            clearResultsMsg();
+            clearAddMsg();
+          }
+        });
+
+        // Clear on input focus/change
+        document.addEventListener("focus", (e) => {
+          if (e.target.matches("input, select")) {
+            clearResultsMsg();
+            clearAddMsg();
+          }
+        }, true);
 
         // Initial render
         renderHeaders();
