@@ -16,6 +16,20 @@
         --grid: #184149;
         --btn: #0f3841;
         --btn2: #12505b;
+
+        /* Spacing tokens */
+        --space-1: 4px;
+        --space-2: 8px;
+        --space-3: 12px;
+        --space-4: 16px;
+        --space-5: 24px;
+
+        /* Derived colors for performance */
+        --panel-alt: color-mix(in oklab, var(--panel), white 4%);
+        --panel-hover: color-mix(in oklab, var(--panel), white 12%);
+        --border-subtle: color-mix(in oklab, var(--grid), white 10%);
+        --accent-ring: color-mix(in oklab, var(--accent), transparent 85%);
+
         /* Picker-specific tokens */
         --picker-bg: color-mix(
           in oklab,
@@ -40,7 +54,7 @@
         background: var(--bg);
         color: var(--text);
         line-height: 1.35;
-        padding: 24px;
+        padding: clamp(12px, 4vw, 24px);
         box-sizing: border-box;
         transition: background 0.2s ease, color 0.2s ease;
       }
@@ -51,11 +65,14 @@
         font-weight: 600;
       }
       h1 {
-        font-size: 22px;
+        font-size: clamp(20px, 4vw, 22px);
       }
       h2 {
-        font-size: 18px;
+        font-size: clamp(16px, 3.5vw, 18px);
         color: var(--muted);
+      }
+      h3 {
+        font-size: clamp(15px, 3vw, 17px);
       }
       p,
       li,
@@ -87,19 +104,27 @@
       .grid thead th {
         position: sticky;
         top: 0;
-        z-index: 1;
+        z-index: 2;
       }
       .grid .rowhdr {
         text-align: center;
         font-weight: 600;
-        background: color-mix(in oklab, var(--panel), white 4%);
-        width: 140px;
+        background: var(--panel-alt);
+        min-width: minmax(110px, 14ch);
+        padding: 8px;
+        position: sticky;
+        left: 0;
+        z-index: 2;
+        border-right: 1px solid var(--border-subtle);
+      }
+      .grid thead .rowhdr {
+        z-index: 3;
       }
       .grid input[type="datetime-local"] {
-        width: 215px;
+        width: clamp(120px, 40vw, 220px);
         background: color-mix(in oklab, var(--panel), black 10%);
         color: var(--text);
-        border: 1px solid color-mix(in oklab, var(--grid), white 10%);
+        border: 1px solid var(--border-subtle);
         border-radius: 8px;
         padding: 6px 8px;
       }
@@ -166,7 +191,15 @@
               height: 0;
               background: none;
             }
-            .table-wrap { overflow: auto; }
+            .table-wrap { 
+              overflow: auto;
+              scroll-snap-type: x mandatory;
+              -webkit-overflow-scrolling: touch;
+            }
+            .table-wrap .grid td,
+            .table-wrap .grid th {
+              scroll-snap-align: start;
+            }
             .mb-12 { margin-bottom: 12px; }
             .full-span { grid-column: 1 / -1; }
             .ml-8 { margin-left: 8px; }
@@ -193,6 +226,51 @@
             /* Mobile summary stacking */
             @media (max-width: 640px) {
               .summary { grid-template-columns: 1fr !important; }
+              .btns { 
+                flex-direction: column;
+                align-items: stretch;
+              }
+              .themebar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+              }
+              /* Hide theme preview swatches on small screens */
+              .themebar .note,
+              .themebar .swatch {
+                display: none;
+              }
+              .panel {
+                padding: 12px;
+                margin-bottom: 12px;
+              }
+              h1 {
+                font-size: 18px;
+              }
+              h2 {
+                font-size: 16px;
+              }
+              /* Reduce input field widths for better mobile fit */
+              .controls input {
+                max-width: 120px;
+              }
+              /* Constrain ROP input fields in tables */
+              .grid input[type="number"] {
+                width: 70px;
+                max-width: 70px;
+                min-width: 0;
+                text-align: center;
+                -moz-appearance: textfield;
+              }
+            }
+            /* Tablet adjustments */
+            @media (min-width: 641px) and (max-width: 1024px) {
+              .summary {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+              }
+              #active-summary {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+              }
             }
       button {
         background: var(--btn);
@@ -201,6 +279,8 @@
         border-radius: 10px;
         padding: 8px 12px;
         cursor: pointer;
+        font-size: clamp(13px, 2.5vw, 14px);
+        min-height: 44px;
       }
       button:hover {
         background: var(--btn2);
@@ -221,12 +301,12 @@
         text-align: center;
       }
       .summary .num {
-        font-size: 22px;
+        font-size: clamp(20px, 4.5vw, 28px);
         font-weight: 700;
         color: var(--text);
       }
       .summary .lbl {
-        font-size: 12px;
+        font-size: clamp(11px, 2.5vw, 13px);
         color: var(--muted);
       }
       .footer {
@@ -235,17 +315,18 @@
       }
       .controls {
         display: grid;
-        grid-template-columns: repeat(5, max-content);
+        grid-template-columns: repeat(auto-fit, minmax(clamp(140px, 45%, 180px), 1fr));
         gap: 8px 12px;
         align-items: center;
       }
       .controls input {
-        width: 120px;
+        width: 100%;
         padding: 7px 9px;
         border-radius: 8px;
-        border: 1px solid color-mix(in oklab, var(--grid), white 10%);
+        border: 1px solid var(--border-subtle);
         background: color-mix(in oklab, var(--panel), black 10%);
         color: var(--text);
+        text-align: center;
       }
       .controls label {
         color: var(--muted);
@@ -267,9 +348,11 @@
         border: 1px solid color-mix(in oklab, var(--bad), black 30%);
         color: #ffd8e0;
         border-radius: 8px;
-        padding: 4px 6px;
-        font-size: 12px;
+        padding: 10px 14px;
+        font-size: 14px;
         cursor: pointer;
+        min-height: 44px;
+        min-width: 44px;
       }
       .delBtn:hover {
         background: color-mix(in oklab, var(--bad), black 30%);
@@ -291,9 +374,9 @@
         padding: 6px 8px;
       }
       .swatch {
-        width: 18px;
-        height: 18px;
-        border-radius: 4px;
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
         display: inline-block;
         border: 1px solid color-mix(in oklab, var(--grid), white 10%);
         margin-left: 6px;
@@ -493,7 +576,7 @@
           <table class="grid" id="tbl-input">
             <thead>
               <tr id="thead-input">
-                <th>WOB (klbf)</th>
+                <th class="rowhdr">WOB (klbf)</th>
               </tr>
             </thead>
             <tbody id="tbody-input"></tbody>
@@ -512,7 +595,7 @@
           <table class="grid" id="tbl-calc">
             <thead>
               <tr id="thead-calc">
-                <th>WOB Range (klbf)</th>
+                <th class="rowhdr">WOB Range (klbf)</th>
               </tr>
             </thead>
             <tbody id="tbody-calc"></tbody>
@@ -680,6 +763,19 @@
           const r = document.documentElement.style;
           for (const [k, val] of Object.entries(v))
             r.setProperty(`--${k}`, val);
+          
+          // Update derived color variables for performance optimization
+          if (v.panel) {
+            r.setProperty("--panel-alt", `color-mix(in oklab, ${v.panel}, white 4%)`);
+            r.setProperty("--panel-hover", `color-mix(in oklab, ${v.panel}, white 12%)`);
+          }
+          if (v.grid) {
+            r.setProperty("--border-subtle", `color-mix(in oklab, ${v.grid}, white 10%)`);
+          }
+          if (v.accent) {
+            r.setProperty("--accent-ring", `color-mix(in oklab, ${v.accent}, transparent 85%)`);
+          }
+          
           // Ensure picker tokens exist and derive from theme if not explicitly provided
           if (!v["picker-bg"]) {
             const pickerBg = `color-mix(in oklab, ${
@@ -975,6 +1071,7 @@
           for (const rpm of allRpms()) {
             const mk = () => {
               const th = document.createElement("th");
+              th.setAttribute("scope", "col");
               const wrap = document.createElement("div");
               wrap.className = "rpmHdr";
               const lbl = document.createElement("span");
@@ -982,6 +1079,7 @@
               const del = document.createElement("button");
               del.className = "delBtn";
               del.title = `Remove RPM ${rpm}`;
+              del.setAttribute("aria-label", `Remove RPM column ${rpm}`);
               del.textContent = "×";
               del.addEventListener("click", () => removeRpm(rpm));
               wrap.appendChild(lbl);
@@ -1002,6 +1100,7 @@
           tr.dataset.wob = String(wob);
           const th = document.createElement("th");
           th.className = "rowhdr";
+          th.setAttribute("scope", "row");
           th.textContent = wob;
           tr.appendChild(th);
           for (const rpm of allRpms()) tr.appendChild(buildInputCell(rpm, wob));
@@ -1022,14 +1121,15 @@
             inp.step = 1;
             inp.placeholder = "YYYY-MM-DDThh:mm:ss";
             inp.id = inputId(rpm, wob);
-            inp.addEventListener("change", recalc); // Accessibility: hint and label on the input (picker button removed)
-            inp.title = "Open date/time picker";
-            inp.setAttribute("aria-label", "Date and time");
+            inp.addEventListener("change", recalc);
+            inp.title = "Select date and time for drill-off test";
+            inp.setAttribute("aria-label", `Date and time for ${rpm} RPM at ${wob} klbf WOB`);
             wrap.appendChild(inp);
             td.appendChild(wrap);
           } else {
             td.textContent = "—";
             td.style.opacity = 0.5;
+            td.setAttribute("aria-label", "Not applicable");
           }
           return td;
         }
@@ -1051,11 +1151,13 @@
             const tr = document.createElement("tr");
             const th = document.createElement("th");
             th.className = "rowhdr";
+            th.setAttribute("scope", "row");
             th.textContent = `${hi} - ${lo}`;
             tr.appendChild(th);
             for (const rpm of allRpms()) {
               const td = document.createElement("td");
               td.id = cellId(hi, lo, rpm);
+              td.setAttribute("aria-label", `Duration for ${rpm} RPM, WOB range ${hi} to ${lo} klbf`);
               tr.appendChild(td);
             }
             tbodyCalc.appendChild(tr);
@@ -1255,6 +1357,7 @@
           const thead = document.createElement("thead");
           const trh = document.createElement("tr");
           const th0 = document.createElement("th");
+          th0.className = "rowhdr";
           th0.textContent = "Bit RPM from Passive Drill-Off Test";
           trh.appendChild(th0);
           for (const wob of columns) {
@@ -1348,6 +1451,7 @@
           const thead = document.createElement("thead");
           const trh = document.createElement("tr");
           const thLabel = document.createElement("th");
+          thLabel.className = "rowhdr";
           thLabel.textContent = "Optimum WOB (klbf)";
           trh.appendChild(thLabel);
           for (const r of rpms) {
