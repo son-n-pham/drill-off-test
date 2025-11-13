@@ -385,7 +385,7 @@
     <div id="passive-test" role="region" aria-labelledby="passive-title">
       <h2 id="passive-title">Passive Drill‑Off Test</h2>
       <section class="panel">
-        <h2>Passive Setup: Add custom RPM column</h2>
+        <h3>Passive Setup: Add custom Bit RPM column</h3>
         <div class="controls" style="margin: 8px 0 6px">
           <label for="newRpm">RPM</label>
           <input
@@ -401,10 +401,10 @@
         <div class="btns" style="margin-top: 6px">
           <button id="btn-reset">Reset to defaults</button>
           <button id="btn-save-rpms" title="Download current RPM list as JSON">
-            Save RPMs
+            Save Bit RPMs
           </button>
           <button id="btn-load-rpms" title="Load RPM list from JSON file">
-            Load RPMs
+            Load Bit RPMs
           </button>
           <input
             type="file"
@@ -461,7 +461,7 @@
           </div>
           <div class="card">
             <div class="num" id="min-rpm">–</div>
-            <div class="lbl">RPM</div>
+            <div class="lbl">Bit RPM</div>
           </div>
           <div class="card">
             <div class="num" id="min-range">–</div>
@@ -479,8 +479,8 @@
     <div id="active-test" role="region" aria-labelledby="active-title">
       <h2 id="active-title">Active Drill‑Off Test</h2>
       <section class="panel" id="active-panel">        
+        <h3>1) Maintain bit RPM &amp; each WOB for 5 minutes and record ROP to identify Optimum WOB</h3>
         <div class="controls">
-          <!-- ROP Unit control removed -->
            
           <!-- WOB Step -->
           <label
@@ -500,6 +500,7 @@
         </div>
       </section>
       <section class="panel">
+        <h3>2) Maintain Optimum WOB &amp; each bit RPM for 5 minutes and record ROP to identify Optimum Bit RPM</h3>
         <div class="controls">
           <!-- RPM Step -->
           <label
@@ -528,7 +529,7 @@
           </div>
           <div class="card">
             <div class="num" id="active-opt-rpm">–</div>
-            <div class="lbl">Optimum RPM</div>
+            <div class="lbl">Optimum Bit RPM</div>
           </div>
         </div>
       </section>
@@ -1154,7 +1155,7 @@
           const thead = document.createElement("thead");
           const trh = document.createElement("tr");
           const th0 = document.createElement("th");
-          th0.textContent = "RPM from Passive Drill-Off Test";
+          th0.textContent = "Bit RPM from Passive Drill-Off Test";
           trh.appendChild(th0);
           for (const wob of columns) {
             const th = document.createElement("th");
@@ -1201,6 +1202,14 @@
           // Replace container contents
           container.innerHTML = "";
           container.appendChild(tbl);
+
+          // Clean up activeState.wobRops: remove any WOB values not in current columns
+          const validWobs = new Set(columns.map(String));
+          for (const wobKey of Object.keys(activeState.wobRops)) {
+            if (!validWobs.has(wobKey)) {
+              delete activeState.wobRops[wobKey];
+            }
+          }
 
           // Update optimum WOB after rendering table
           try {
@@ -1531,7 +1540,6 @@
           const weighted = (chosen[0].rpm * w1 + chosen[1].rpm * w2) / (w1 + w2);
           const avg = Math.round(weighted);
           activeState.derivedOptRpm = avg;
-          return avg;
           updateActiveSummary(); // Update summary display
           return avg;
         }
