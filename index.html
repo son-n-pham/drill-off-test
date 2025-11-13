@@ -332,6 +332,74 @@
         color: var(--text);
         font-weight: 500;
       }
+
+      /* Passive Drill-Off Test - Blue/Cyan Theme */
+      #passive-test {
+        border: 2px solid color-mix(in oklab, var(--accent), white 20%);
+        border-radius: 16px;
+        padding: 20px;
+        background: color-mix(in oklab, var(--panel), var(--accent) 2%);
+        box-shadow: 0 2px 16px color-mix(in oklab, var(--accent), transparent 88%);
+        margin-bottom: 24px;
+      }
+
+      #passive-test #passive-title {
+        color: var(--accent);
+        font-size: 20px;
+        margin-bottom: 16px;
+      }
+
+      #passive-test .panel {
+        background: color-mix(in oklab, var(--panel), var(--accent) 1%);
+        border-color: color-mix(in oklab, var(--accent), transparent 70%);
+      }
+
+      /* Active Drill-Off Test - Green Theme */
+      #active-test {
+        border: 2px solid var(--good);
+        border-radius: 16px;
+        padding: 20px;
+        background: color-mix(in oklab, var(--panel), var(--good) 2%);
+        box-shadow: 0 2px 16px color-mix(in oklab, var(--good), transparent 88%);
+        margin-bottom: 24px;
+      }
+
+      #active-test #active-title {
+        color: var(--good);
+        font-size: 20px;
+        margin-bottom: 16px;
+      }
+
+      #active-test .panel {
+        background: color-mix(in oklab, var(--panel), var(--good) 1%);
+        border-color: color-mix(in oklab, var(--good), transparent 70%);
+      }
+
+      /* Update Active Summary Panel to match Green Theme */
+      #active-summary-panel {
+        border: 2px solid var(--good);
+        box-shadow: 0 4px 20px color-mix(in oklab, var(--good), transparent 75%),
+                    0 0 0 1px color-mix(in oklab, var(--good), transparent 85%) inset;
+        background: color-mix(in oklab, var(--panel), var(--good) 4%);
+        margin: 24px 0;
+      }
+
+      #active-summary-panel h2 {
+        color: var(--good);
+        font-size: 20px;
+        margin-bottom: 12px;
+      }
+
+      #active-summary .card {
+        background: color-mix(in oklab, var(--panel), white 2%);
+        border: 1px solid color-mix(in oklab, var(--good), transparent 70%);
+      }
+
+      #active-summary .num {
+        color: var(--good);
+        font-size: 28px;
+        font-weight: 700;
+      }
     </style>
   </head>
   <body>
