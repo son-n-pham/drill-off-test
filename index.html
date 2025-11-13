@@ -451,7 +451,7 @@
           ></div>
 
           <label
-            >RPM Step (klbf)
+            >RPM Step (rpm)
             <input
               type="number"
               id="rpmStep"
@@ -467,8 +467,6 @@
             id="opt-rpm-trials-container"
             style="overflow: auto; margin-bottom: 12px; grid-column: 1 / -1;"
           ></div>
-
-          <div id="derived-opt-rpm-display" class="note" style="margin-bottom:12px">Derived Optimum RPM: –</div>
 
           
         </div>
@@ -806,6 +804,22 @@
         const formatSec = (x) =>
           Number.isFinite(x) ? Math.round(x * 1000) / 1000 : "";
 
+        // Comparator for passive durations: prefer lower seconds, then lower RPM,
+        // then lower average WOB ( (hi+lo)/2 ). This implements the rule:
+        // when seconds equal, prefer lower RPM and lower WOB range (by mean).
+        function passiveDurationCmp(a, b) {
+          if (a.seconds !== b.seconds) return a.seconds - b.seconds;
+          if (a.rpm !== b.rpm) return a.rpm - b.rpm;
+          const [ahi, alo] = String(a.range).split("-").map(Number);
+          const [bhi, blo] = String(b.range).split("-").map(Number);
+          const aAvg = (ahi + alo) / 2;
+          const bAvg = (bhi + blo) / 2;
+          if (aAvg !== bAvg) return aAvg - bAvg;
+          if (ahi !== bhi) return ahi - bhi; // fallback
+          if (alo !== blo) return alo - blo;
+          return 0;
+        }
+
         function updateEmptyStates() {
           const has = allRpms().length > 0;
           emptyInput.style.display = has ? "none" : "block";
@@ -929,18 +943,36 @@
               );
               const td = document.getElementById(cellId(hi, lo, rpm));
               let val = "";
-              if (Number.isFinite(tHi) && Number.isFinite(tLo)) {
-                const diff = tLo - tHi;
-                if (diff >= 0) {
-                  val = diff;
-                  if (diff < rpmMin.val) {
-                    rpmMin = { val: diff, cell: td };
+                if (Number.isFinite(tHi) && Number.isFinite(tLo)) {
+                  const diff = tLo - tHi;
+                  if (diff >= 0) {
+                    val = diff;
+                    // Tie-break for per-RPM minimum: prefer lower average WOB
+                    if (
+                      diff < rpmMin.val ||
+                      (diff === rpmMin.val && (() => {
+                        // compare mean WOB of current range vs stored rpmMin.cell (if present)
+                        try {
+                          if (!rpmMin.cell) return true;
+                          const prevId = rpmMin.cell.id; // format d_HI_LO_RPM
+                          const parts = prevId.split("_");
+                          const prevHi = Number(parts[1]);
+                          const prevLo = Number(parts[2]);
+                          const curAvg = (hi + lo) / 2;
+                          const prevAvg = (prevHi + prevLo) / 2;
+                          return curAvg < prevAvg;
+                        } catch (e) {
+                          return false;
+                        }
+                      })())
+                    ) {
+                      rpmMin = { val: diff, cell: td };
+                    }
+                    durations.push({ rpm, range: `${hi}-${lo}`, seconds: diff });
+                  } else {
+                    val = "Invalid (negative)";
                   }
-                  durations.push({ rpm, range: `${hi}-${lo}`, seconds: diff });
-                } else {
-                  val = "Invalid (negative)";
                 }
-              }
               if (td)
                 td.textContent = typeof val === "number" ? formatSec(val) : val;
             }
@@ -951,7 +983,7 @@
           const minRange = document.getElementById("min-range");
           const valid = durations.filter((d) => Number.isFinite(d.seconds));
           if (valid.length) {
-            valid.sort((a, b) => a.seconds - b.seconds);
+            valid.sort(passiveDurationCmp);
             const best = valid[0];
             minTime.textContent = formatSec(best.seconds);
             minRpm.textContent = String(best.rpm);
@@ -1220,14 +1252,7 @@
           tbody.appendChild(tr);
           tbl.appendChild(tbody);
           container.appendChild(tbl);
-          // Ensure display exists (in case dynamically added) and compute initial value
-          if (!document.getElementById("derived-opt-rpm-display")) {
-            const d = document.createElement("div");
-            d.id = "derived-opt-rpm-display";
-            d.className = "note";
-            d.textContent = "Optimum RPM: –";
-            container.parentElement && container.parentElement.insertBefore(d, container.nextSibling);
-          }
+          // compute initial value
           deriveOptimumRpmFromTrials();
         }
 
@@ -1430,8 +1455,6 @@
             );
           if (rows.length < 2) {
             activeState.derivedOptRpm = null;
-            const el = document.getElementById("derived-opt-rpm-display");
-            if (el) el.textContent = "Optimum RPM: –";
             return null;
           }
           // Sort by ROP desc, then RPM asc (so ties favor lower RPMs)
@@ -1454,8 +1477,7 @@
           const weighted = (chosen[0].rpm * w1 + chosen[1].rpm * w2) / (w1 + w2);
           const avg = Math.round(weighted);
           activeState.derivedOptRpm = avg;
-          const el = document.getElementById("derived-opt-rpm-display");
-          if (el) el.textContent = `Derived Optimum RPM: ${avg}`;
+          return avg;
           updateActiveSummary(); // Update summary display
           return avg;
         }
@@ -2054,7 +2076,7 @@
           for (const rpm of allRpms()) {
             const col = valid
               .filter((d) => d.rpm === Number(rpm))
-              .sort((a, b) => a.seconds - b.seconds);
+              .sort(passiveDurationCmp);
             if (col.length) {
               const best = col[0];
               const td = document.getElementById(
@@ -2064,7 +2086,7 @@
             }
           }
           if (valid.length) {
-            valid.sort((a, b) => a.seconds - b.seconds);
+            valid.sort(passiveDurationCmp);
             const best = valid[0];
             document.getElementById("min-time").textContent = formatSec(
               best.seconds
