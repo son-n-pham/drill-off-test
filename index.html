@@ -1869,6 +1869,76 @@
           .getElementById("btn-reset")
           .addEventListener("click", resetDefaults);
         // 'Recalculate' button removed as it's redundant; recalc() is called on input change
+        
+        // ===== EMBEDDED SAMPLE CSV DATA =====
+        const SAMPLE_CSV_DATA = `META,version=4,generated=2025-11-13T17:01:12.525Z
+
+RPM,WOB Range (klbf),Seconds
+180,45-35,200
+180,35-25,225
+180,25-15,25
+180,15-5,205
+190,45-35,50
+190,35-25,130
+190,25-15,100
+190,15-5,40
+200,40-30,300
+200,30-20,601
+200,20-10,59
+210,40-30,60
+210,30-20,70
+210,20-10,30
+
+Minimum,180,25- 15,25
+
+TIMESTAMPS
+RPM,WOB,Timestamp
+180,45,2025-11-13T08:15:15
+180,35,2025-11-13T08:18:35
+180,25,2025-11-13T08:22:20
+180,15,2025-11-13T08:22:45
+180,5,2025-11-13T08:26:10
+190,45,2025-11-13T08:29:10
+190,35,2025-11-13T08:30
+190,25,2025-11-13T08:32:10
+190,15,2025-11-13T08:33:50
+190,5,2025-11-13T08:34:30
+200,40,2025-11-13T08:35:10
+200,30,2025-11-13T08:40:10
+200,20,2025-11-13T08:50:11
+200,10,2025-11-13T08:51:10
+210,40,2025-11-13T09:11:30
+210,30,2025-11-13T09:12:30
+210,20,2025-11-13T09:13:40
+210,10,2025-11-13T09:14:10
+
+ACTIVE-SETTINGS
+Unit,m/hr
+CountdownMinutes,5
+WobStep,5
+RpmStep,5
+
+ACTIVE-WOB-TABLE
+WOB,ROP
+25,32
+20,35
+15,30
+
+ACTIVE-OPT-TRIALS
+RPM,ROP
+175,30
+180,31
+185,29
+
+ACTIVE-SUMMARY
+OptRpm,180
+WobLow,15
+WobHigh,25
+SelectedWob,22
+DerivedOptRpm,178
+FinalRpm,
+`;
+        
         document.getElementById("btn-clear").addEventListener("click", () => {
           // Clear passive timestamps
           document
@@ -1911,42 +1981,56 @@
           updateActiveTestVisibility(false);
         });
         document.getElementById("btn-sample").addEventListener("click", () => {
-          const day = todayISODate();
-          const sample = {
-            180: {
-              45: `${day}T08:15:15`,
-              35: `${day}T08:17:35`,
-              25: `${day}T08:20:20`,
-              15: `${day}T08:20:45`,
-              5: `${day}T08:21:10`,
-            },
-            190: {
-              45: `${day}T08:29:10`,
-              35: `${day}T08:30:00`,
-              25: `${day}T08:32:10`,
-              15: `${day}T08:33:50`,
-              5: `${day}T08:34:30`,
-            },
-            200: {
-              40: `${day}T08:35:10`,
-              30: `${day}T08:40:10`,
-              20: `${day}T08:50:11`,
-              10: `${day}T08:51:10`,
-            },
-            210: {
-              40: `${day}T09:11:30`,
-              30: `${day}T09:12:30`,
-              20: `${day}T09:13:40`,
-              10: `${day}T09:14:10`,
-            },
-          };
-          for (const rpm of Object.keys(sample)) {
-            for (const wob of Object.keys(sample[rpm])) {
-              const el = document.getElementById(inputId(rpm, wob));
-              if (el) el.value = sample[rpm][wob];
+          try {
+            // Parse the embedded sample CSV data
+            const parsed = parseResultsCsv(SAMPLE_CSV_DATA);
+
+            // Update today's date for the sample timestamps
+            const today = todayISODate();
+
+            // parsed.timestamps is an object: { rpm: { wob: timestamp } }
+            if (parsed.timestamps && typeof parsed.timestamps === 'object') {
+              // Convert timestamps to today's date while preserving time
+              for (const rpm of Object.keys(parsed.timestamps)) {
+                const wobMap = parsed.timestamps[rpm] || {};
+                for (const wob of Object.keys(wobMap)) {
+                  const originalTimestamp = wobMap[wob];
+                  if (!originalTimestamp) continue;
+
+                  // Extract time from original timestamp and apply to today
+                  const timeMatch = String(originalTimestamp).match(/T(.+)$/);
+                  const time = timeMatch ? timeMatch[1] : '00:00:00';
+                  const newTimestamp = `${today}T${time}`;
+
+                  // Apply to input field
+                  const el = document.getElementById(inputId(rpm, wob));
+                  if (el) el.value = newTimestamp;
+                }
+              }
             }
+
+            // Restore active test data if present
+            if (parsed.active) {
+              restoreActiveState(parsed.active);
+            }
+
+            // Recalculate to update all derived values
+            recalc();
+
+            // Render active test components
+            try {
+              renderActiveWobTable();
+              renderOptimumRpmTrialsTable();
+              updateActiveSummary();
+            } catch (e) {
+              console.warn('Active test rendering:', e);
+            }
+
+            setResultsMsg('✓ Sample data loaded successfully', 3000);
+          } catch (err) {
+            console.error('Sample data load error:', err);
+            setResultsMsg('⚠ Error loading sample data', 5000);
           }
-          recalc();
         });
         // Single comprehensive export (passive + active). Versioned for compatibility.
         document.getElementById("btn-export").addEventListener("click", () => {
