@@ -400,6 +400,24 @@
         font-size: 28px;
         font-weight: 700;
       }
+      .main-container {
+        display: flex;
+        flex-direction: row;
+        gap: 24px;
+        flex-wrap: wrap;
+      }
+      .main-container > div {
+        flex: 1;
+        min-width: 500px;
+      }
+      .table-container {
+        overflow-x: auto;
+      }
+      @media screen and (max-width: 1024px) {
+        .main-container {
+            flex-direction: column;
+        }
+      }
     </style>
   </head>
   <body>
@@ -450,6 +468,7 @@
 
     <hr class="section-divider" />
 
+    <div class="main-container">
     <div id="passive-test" role="region" aria-labelledby="passive-title">
       <h2 id="passive-title">Passive Drill‑Off Test</h2>
       <section class="panel">
@@ -489,7 +508,7 @@
         <div id="empty-state-input" class="note" style="display: none">
           No RPM columns. Add one above to begin.
         </div>
-        <div style="overflow: auto; margin-top: 8px">
+        <div class="table-container">
           <table class="grid" id="tbl-input">
             <thead>
               <tr id="thead-input">
@@ -508,7 +527,7 @@
         <div id="empty-state-calc" class="note" style="display: none">
           No RPM columns to calculate. Add one above.
         </div>
-        <div style="overflow: auto; margin-top: 8px">
+        <div class="table-container">
           <table class="grid" id="tbl-calc">
             <thead>
               <tr id="thead-calc">
@@ -601,6 +620,7 @@
           </div>
         </div>
       </section>
+    </div>
     </div>
 
     <section class="footer">
