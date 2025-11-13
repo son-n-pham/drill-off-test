@@ -385,7 +385,7 @@
       </section>
 
       <section class="panel">
-        <h2>Passive 1) Input: Date &amp; time to drill‑off</h2>
+        <h3>1) Input: Date &amp; time to drill‑off</h3>
         
         <div id="empty-state-input" class="note" style="display: none">
           No RPM columns. Add one above to begin.
@@ -403,9 +403,9 @@
       </section>
 
       <section class="panel">
-        <h2>
-          Passive 2) Calculated: Drill‑off duration by WOB range (seconds)
-        </h2>
+        <h3>
+          2) Calculated: Drill‑off duration by WOB range (seconds)
+        </h3>
         <div id="empty-state-calc" class="note" style="display: none">
           No RPM columns to calculate. Add one above.
         </div>
@@ -422,7 +422,7 @@
       </section>
 
       <section class="panel">
-        <h2>Passive 3) Fastest drill‑off</h2>
+        <h3>3) Fastest drill‑off</h3>
         <div class="summary" id="summary">
           <div class="card">
             <div class="num" id="min-time">–</div>
@@ -447,29 +447,10 @@
     <!-- ACTIVE DRILL-OFF TEST SECTION -->
     <div id="active-test" role="region" aria-labelledby="active-title">
       <h2 id="active-title">Active Drill‑Off Test</h2>
-      <section class="panel" id="active-panel">
-
-        <p class="note">
-          Sequence continues from passive optimum RPM & WOB range. Follow steps
-          below.
-        </p>
-        <ol class="note ml-20">
-          <li>Seed optimum RPM and min/max WOB from passive test.</li>
-          <li>
-            Hold each WOB for countdown duration and record ROP (<span
-              id="active-unit-label-seed"
-              >m/hr</span
-            >).
-          </li>
-          <li>Select faster WOB (or between if tied).</li>
-          <li>
-            At selected WOB run RPM trials: optimum, −5, +5 (add more if desired).
-          </li>
-          <li>Finalize RPM between two fastest ROPs.</li>
-        </ol>
-        
+      <section class="panel" id="active-panel">        
         <div class="controls">
           <!-- ROP Unit control removed -->
+           
           <!-- WOB Step -->
           <label
             >WOB Step (klbf)
@@ -485,7 +466,11 @@
 
           <!-- Active WOB table (generated) -->
           <div id="active-wob-table" class="table-wrap mb-12 full-span"></div>
-
+        </div>
+      </section>
+      <section class="panel">
+        <div class="controls">
+          <!-- RPM Step -->
           <label
             >RPM Step (rpm)
             <input
@@ -500,11 +485,7 @@
 
           <!-- Optimum RPM trials table: user will enter ROPs for Opt RPM and +/-5 -->
           <div id="opt-rpm-trials-container" class="table-wrap mb-12 full-span"></div>
-
-          
         </div>
-        <div id="active-wob-rops" class="mb-14 hidden"></div>
-        <!-- RPM Trials section removed -->
       </section>
 
       <section class="panel hidden" id="active-summary-panel">
