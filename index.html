@@ -169,6 +169,9 @@
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 10px;
       }
+      #active-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
       .summary .card {
         background: color-mix(in oklab, var(--panel), black 4%);
         border: 1px solid var(--grid);
@@ -487,10 +490,6 @@
           <div class="card">
             <div class="num" id="active-opt-rpm">–</div>
             <div class="lbl">Derived Optimum RPM</div>
-          </div>
-          <div class="card">
-            <div class="num" id="active-rop-unit">–</div>
-            <div class="lbl">ROP Unit</div>
           </div>
         </div>
       </section>
@@ -1256,7 +1255,7 @@
           deriveOptimumRpmFromTrials();
         }
 
-        // Compute optimum WOB by selecting the two ROPs that give the highest WOBs
+        // Compute optimum WOB using weighted-average strategy (match Derived Opt RPM logic)
         function computeOptimumWobFromTable() {
           // activeState.wobRops: { wob: rop }
           const entries = Object.keys(activeState.wobRops)
@@ -1264,7 +1263,7 @@
               wob: Number(k),
               rop: Number(activeState.wobRops[k]),
             }))
-            .filter((e) => Number.isFinite(e.wob) && Number.isFinite(e.rop));
+            .filter((e) => Number.isFinite(e.wob) && Number.isFinite(e.rop) && e.rop > 0);
           if (entries.length < 2) {
             const _aSeedOptwobEl = document.getElementById("a-seed-optwob");
             if (_aSeedOptwobEl) _aSeedOptwobEl.textContent = "–";
@@ -1272,14 +1271,32 @@
             if (wobHdr) wobHdr.textContent = "–"; // keep trials table in sync
             // Clear selectedWob when fewer than 2 entries
             activeState.selectedWob = null;
+            updateActiveSummary();
             return null;
           }
-          // We need to select the two ROPs which give the highest WOB — interpreted as pick the two entries with highest ROP values,
-          // then compute optimum WOB as average of their WOBs.
-          entries.sort((a, b) => b.rop - a.rop);
-          const top = entries.slice(0, 2);
-          const opt = (top[0].wob + top[1].wob) / 2;
-          const rounded = Math.round(opt * 100) / 100;
+
+          // Sort by ROP desc, then WOB asc so ties favor lower WOB values
+          entries.sort((a, b) => {
+            if (b.rop !== a.rop) return b.rop - a.rop;
+            return a.wob - b.wob;
+          });
+
+          // Choose top two trials (preserve tie behaviour similar to RPM logic)
+          const topRop = entries[0].rop;
+          const tied = entries.filter((e) => e.rop === topRop);
+          let chosen;
+          if (tied.length >= 2) {
+            chosen = tied.slice(0, 2); // already wob-asc
+          } else {
+            chosen = entries.slice(0, 2);
+          }
+
+          // Compute weighted average using ROP as weight and round to integer (WOB in klbf)
+          const w1 = chosen[0].rop;
+          const w2 = chosen[1].rop;
+          const weighted = (chosen[0].wob * w1 + chosen[1].wob * w2) / (w1 + w2);
+          const rounded = Math.round(weighted);
+
           activeState.selectedWob = rounded;
           const _aSeedOptwobEl2 = document.getElementById("a-seed-optwob");
           if (_aSeedOptwobEl2) _aSeedOptwobEl2.textContent = String(rounded);
@@ -1294,9 +1311,8 @@
           const panel = document.getElementById("active-summary-panel");
           const optWobEl = document.getElementById("active-opt-wob");
           const optRpmEl = document.getElementById("active-opt-rpm");
-          const ropUnitEl = document.getElementById("active-rop-unit");
           
-          if (!panel || !optWobEl || !optRpmEl || !ropUnitEl) return;
+          if (!panel || !optWobEl || !optRpmEl) return;
           
           const hasWob = Number.isFinite(activeState.selectedWob);
           const hasRpm = Number.isFinite(activeState.derivedOptRpm);
@@ -1306,7 +1322,6 @@
             panel.style.display = "block";
             optWobEl.textContent = hasWob ? String(activeState.selectedWob) : "–";
             optRpmEl.textContent = hasRpm ? String(activeState.derivedOptRpm) : "–";
-            ropUnitEl.textContent = activeState.ropUnit || "m/hr";
           } else {
             panel.style.display = "none";
           }
