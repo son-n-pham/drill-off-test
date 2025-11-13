@@ -1,856 +1,2345 @@
 <!DOCTYPE html>
 <html lang="en-GB">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Drill‑Off Test</title>
-<style>
-  :root {
-    --bg:#071a1f; --panel:#0c2a31; --text:#e7fffb; --muted:#9bd5cf; --accent:#00d1c1; --good:#13c27f; --bad:#ff6b6b; --grid:#184149; --btn:#0f3841; --btn2:#12505b;
-    /* Picker-specific tokens */
-    --picker-bg: color-mix(in oklab, var(--panel), white 8%); /* slightly lighter than panel */
-    --picker-border: color-mix(in oklab, var(--grid), white 18%);
-    --picker-hover-bg: color-mix(in oklab, var(--panel), white 12%);
-    --picker-focus-border: color-mix(in oklab, var(--accent), white 10%);
-    --picker-focus-ring: 0 0 0 4px color-mix(in oklab, var(--accent), transparent 85%);
-    --picker-disabled-bg: color-mix(in oklab, var(--panel), black 6%);
-    --picker-disabled-text: color-mix(in oklab, var(--text), black 40%);
-  }
-  html, body { height: 100%; }
-  body { margin:0; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; background:var(--bg); color:var(--text); line-height:1.35; padding:24px; box-sizing:border-box; transition: background .2s ease, color .2s ease; }
-  h1, h2, h3 { margin:0 0 8px; font-weight:600; }
-  h1 { font-size:22px; }
-  h2 { font-size:18px; color:var(--muted);} 
-  p, li, label { color: var(--muted); }
-  .panel { background:var(--panel); border:1px solid var(--grid); border-radius:12px; padding:16px; margin:0 0 16px; }
-  .grid { width:100%; border-collapse:collapse; font-size:14px; }
-  .grid th, .grid td { border:1px solid var(--grid); padding:8px 10px; text-align:center; vertical-align:middle; }
-  .grid th { background: color-mix(in oklab, var(--panel), white 4%); position:sticky; top:0; z-index:1; }
-  .grid .rowhdr { text-align:center; font-weight:600; background: color-mix(in oklab, var(--panel), white 4%); width:140px; }
-  .grid input[type="datetime-local"] { width:215px; background: color-mix(in oklab, var(--panel), black 10%); color: var(--text); border:1px solid color-mix(in oklab, var(--grid), white 10%); border-radius:8px; padding:6px 8px; }
-  .grid input[disabled] { opacity:.35; }
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Drill‑Off Test</title>
+    <style>
+      :root {
+        --bg: #071a1f;
+        --panel: #0c2a31;
+        --text: #e7fffb;
+        --muted: #9bd5cf;
+        --accent: #00d1c1;
+        --good: #13c27f;
+        --bad: #ff6b6b;
+        --grid: #184149;
+        --btn: #0f3841;
+        --btn2: #12505b;
+        /* Picker-specific tokens */
+        --picker-bg: color-mix(
+          in oklab,
+          var(--panel),
+          white 8%
+        ); /* slightly lighter than panel */
+        --picker-border: color-mix(in oklab, var(--grid), white 18%);
+        --picker-hover-bg: color-mix(in oklab, var(--panel), white 12%);
+        --picker-focus-border: color-mix(in oklab, var(--accent), white 10%);
+        --picker-focus-ring: 0 0 0 4px
+          color-mix(in oklab, var(--accent), transparent 85%);
+        --picker-disabled-bg: color-mix(in oklab, var(--panel), black 6%);
+        --picker-disabled-text: color-mix(in oklab, var(--text), black 40%);
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.35;
+        padding: 24px;
+        box-sizing: border-box;
+        transition: background 0.2s ease, color 0.2s ease;
+      }
+      h1,
+      h2,
+      h3 {
+        margin: 0 0 8px;
+        font-weight: 600;
+      }
+      h1 {
+        font-size: 22px;
+      }
+      h2 {
+        font-size: 18px;
+        color: var(--muted);
+      }
+      p,
+      li,
+      label {
+        color: var(--muted);
+      }
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--grid);
+        border-radius: 12px;
+        padding: 16px;
+        margin: 0 0 16px;
+      }
+      .grid {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+      .grid th,
+      .grid td {
+        border: 1px solid var(--grid);
+        padding: 8px 10px;
+        text-align: center;
+        vertical-align: middle;
+      }
+      .grid th {
+        background: color-mix(in oklab, var(--panel), white 4%);
+        position: sticky;
+        top: 0;
+        z-index: 1;
+      }
+      .grid .rowhdr {
+        text-align: center;
+        font-weight: 600;
+        background: color-mix(in oklab, var(--panel), white 4%);
+        width: 140px;
+      }
+      .grid input[type="datetime-local"] {
+        width: 215px;
+        background: color-mix(in oklab, var(--panel), black 10%);
+        color: var(--text);
+        border: 1px solid color-mix(in oklab, var(--grid), white 10%);
+        border-radius: 8px;
+        padding: 6px 8px;
+      }
+      .grid input[disabled] {
+        opacity: 0.35;
+      }
 
-  /* Enhanced picker styles for visibility and accessibility */
-  .grid input[type="datetime-local"] {
-    background: var(--picker-bg);
-    border: 1px solid var(--picker-border);
-    color: var(--text);
-    transition: background .12s ease, box-shadow .12s ease, border-color .12s ease;
-  }
-  .grid input[type="datetime-local"]:hover { background: var(--picker-hover-bg); }
-  .grid input[type="datetime-local"]:focus, .grid input[type="datetime-local"]:focus-visible {
-    outline: none;
-    border-color: var(--picker-focus-border);
-    box-shadow: var(--picker-focus-ring);
-  }
-  .grid input[type="datetime-local"]:disabled {
-    opacity: 1;
-    background: var(--picker-disabled-bg);
-    color: var(--picker-disabled-text);
-    border-color: color-mix(in oklab, var(--grid), black 30%);
-  }
-  .note { font-size:12px; }
-  .tag { display:inline-block; padding:2px 8px; border:1px solid var(--grid); border-radius:999px; color:var(--muted); margin-left:8px; }
-  .colMin { outline:2px solid color-mix(in oklab, var(--accent), white 20%); }
-  .globalMin { outline:3px solid var(--good); box-shadow:0 0 0 2px color-mix(in oklab, var(--good), transparent 80%) inset; }
-  .btns { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-  button { background:var(--btn); color:var(--text); border:1px solid color-mix(in oklab, var(--grid), white 10%); border-radius:10px; padding:8px 12px; cursor:pointer; }
-  button:hover { background:var(--btn2); }
-  .summary { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:10px; }
-  .summary .card { background: color-mix(in oklab, var(--panel), black 4%); border:1px solid var(--grid); border-radius:10px; padding:14px; text-align:center; }
-  .summary .num { font-size:22px; font-weight:700; color:var(--text); }
-  .summary .lbl { font-size:12px; color:var(--muted); }
-  .footer { color:#7f93bb; font-size:12px; }
-  .controls { display:grid; grid-template-columns: repeat(5, max-content); gap:8px 12px; align-items:center; }
-  .controls input { width:120px; padding:7px 9px; border-radius:8px; border:1px solid color-mix(in oklab, var(--grid), white 10%); background: color-mix(in oklab, var(--panel), black 10%); color:var(--text); }
-  .controls label { color:var(--muted); }
-  .pickerWrap { display:flex; gap:6px; align-items:center; justify-content:center; }
-  .rpmHdr { display:flex; gap:6px; align-items:center; justify-content:center; }
-  .delBtn { background: color-mix(in oklab, var(--bad), black 50%); border:1px solid color-mix(in oklab, var(--bad), black 30%); color:#ffd8e0; border-radius:8px; padding:4px 6px; font-size:12px; cursor:pointer; }
-  .delBtn:hover { background: color-mix(in oklab, var(--bad), black 30%); }
+      /* Enhanced picker styles for visibility and accessibility */
+      .grid input[type="datetime-local"] {
+        background: var(--picker-bg);
+        border: 1px solid var(--picker-border);
+        color: var(--text);
+        transition: background 0.12s ease, box-shadow 0.12s ease,
+          border-color 0.12s ease;
+      }
+      .grid input[type="datetime-local"]:hover {
+        background: var(--picker-hover-bg);
+      }
+      .grid input[type="datetime-local"]:focus,
+      .grid input[type="datetime-local"]:focus-visible {
+        outline: none;
+        border-color: var(--picker-focus-border);
+        box-shadow: var(--picker-focus-ring);
+      }
+      .grid input[type="datetime-local"]:disabled {
+        opacity: 1;
+        background: var(--picker-disabled-bg);
+        color: var(--picker-disabled-text);
+        border-color: color-mix(in oklab, var(--grid), black 30%);
+      }
+      .note {
+        font-size: 12px;
+      }
+      .tag {
+        display: inline-block;
+        padding: 2px 8px;
+        border: 1px solid var(--grid);
+        border-radius: 999px;
+        color: var(--muted);
+        margin-left: 8px;
+      }
+      .colMin {
+        outline: 2px solid color-mix(in oklab, var(--accent), white 20%);
+      }
+      .globalMin {
+        outline: 3px solid var(--good);
+        box-shadow: 0 0 0 2px color-mix(in oklab, var(--good), transparent 80%)
+          inset;
+      }
+      .btns {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      button {
+        background: var(--btn);
+        color: var(--text);
+        border: 1px solid color-mix(in oklab, var(--grid), white 10%);
+        border-radius: 10px;
+        padding: 8px 12px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: var(--btn2);
+      }
+      .summary {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .summary .card {
+        background: color-mix(in oklab, var(--panel), black 4%);
+        border: 1px solid var(--grid);
+        border-radius: 10px;
+        padding: 14px;
+        text-align: center;
+      }
+      .summary .num {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--text);
+      }
+      .summary .lbl {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .footer {
+        color: #7f93bb;
+        font-size: 12px;
+      }
+      .controls {
+        display: grid;
+        grid-template-columns: repeat(5, max-content);
+        gap: 8px 12px;
+        align-items: center;
+      }
+      .controls input {
+        width: 120px;
+        padding: 7px 9px;
+        border-radius: 8px;
+        border: 1px solid color-mix(in oklab, var(--grid), white 10%);
+        background: color-mix(in oklab, var(--panel), black 10%);
+        color: var(--text);
+      }
+      .controls label {
+        color: var(--muted);
+      }
+      .pickerWrap {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        justify-content: center;
+      }
+      .rpmHdr {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        justify-content: center;
+      }
+      .delBtn {
+        background: color-mix(in oklab, var(--bad), black 50%);
+        border: 1px solid color-mix(in oklab, var(--bad), black 30%);
+        color: #ffd8e0;
+        border-radius: 8px;
+        padding: 4px 6px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      .delBtn:hover {
+        background: color-mix(in oklab, var(--bad), black 30%);
+      }
 
-  .themebar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:-8px 0 16px 0; }
-  .themebar select, .themebar input[type=color] { background: color-mix(in oklab, var(--panel), black 10%); color:var(--text); border:1px solid color-mix(in oklab, var(--grid), white 10%); border-radius:8px; padding:6px 8px; }
-  .swatch { width:18px; height:18px; border-radius:4px; display:inline-block; border:1px solid color-mix(in oklab, var(--grid), white 10%); margin-left:6px; }
-</style>
-</head>
-<body>
-  <header style="margin-bottom:10px">
-    <h1>Passive Drill‑Off Test <span class="tag">Interactive</span></h1>
-    <div class="themebar">
-      <label>Theme: <select id="themeSelect">
-        <option value="dark">Dark</option>
-        <option value="light">Light</option>
-        <option value="ocean" selected>Ocean (default)</option>
-        <option value="bh">BH Green</option>
-        <option value="contrast">High Contrast</option>
-        <option value="custom">Custom…</option>
-      </select></label>
-      <label id="customControls" style="display:none"> Primary <input type="color" id="cPrimary" value="#071a1f"> Accent <input type="color" id="cAccent" value="#00d1c1"> Text <input type="color" id="cText" value="#e7fffb"> Panel <input type="color" id="cPanel" value="#0c2a31"></label>
-      <span class="note">Preview:</span>
-      <span class="swatch" id="sw-bg"  title="Background"></span>
-      <span class="swatch" id="sw-panel" title="Panel"></span>
-      <span class="swatch" id="sw-accent" title="Accent"></span>
-      <span class="swatch" id="sw-text" title="Text"></span>
-      <button id="btn-theme-reset">Reset theme</button>
-      <button id="btn-sample">Load sample data</button>
-    </div>
-  </header>
+      .themebar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        margin: -8px 0 16px 0;
+      }
+      .themebar select,
+      .themebar input[type="color"] {
+        background: color-mix(in oklab, var(--panel), black 10%);
+        color: var(--text);
+        border: 1px solid color-mix(in oklab, var(--grid), white 10%);
+        border-radius: 8px;
+        padding: 6px 8px;
+      }
+      .swatch {
+        width: 18px;
+        height: 18px;
+        border-radius: 4px;
+        display: inline-block;
+        border: 1px solid color-mix(in oklab, var(--grid), white 10%);
+        margin-left: 6px;
+      }
+      #active-test {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <header style="margin-bottom: 10px">
+      <h1>Drill‑Off Test <span class="tag">Interactive</span></h1>
+      <div class="themebar">
+        <label
+          >Theme:
+          <select id="themeSelect">
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+            <option value="ocean" selected>Ocean (default)</option>
+            <option value="bh">BH Green</option>
+            <option value="contrast">High Contrast</option>
+            <option value="custom">Custom…</option>
+          </select></label
+        >
+        <label id="customControls" style="display: none">
+          Primary <input type="color" id="cPrimary" value="#071a1f" /> Accent
+          <input type="color" id="cAccent" value="#00d1c1" /> Text
+          <input type="color" id="cText" value="#e7fffb" /> Panel
+          <input type="color" id="cPanel" value="#0c2a31"
+        /></label>
+        <span class="note">Preview:</span>
+        <span class="swatch" id="sw-bg" title="Background"></span>
+        <span class="swatch" id="sw-panel" title="Panel"></span>
+        <span class="swatch" id="sw-accent" title="Accent"></span>
+        <span class="swatch" id="sw-text" title="Text"></span>
+        <button id="btn-theme-reset">Reset theme</button>
 
-  <div id="passive-test">
-  <section class="panel">
-    <h2>Passive Setup: Add custom RPM column</h2>
-    <div class="controls" style="margin:8px 0 6px">
-      <label for="newRpm">RPM</label>
-      <input type="number" id="newRpm" placeholder="e.g., 175" min="1" step="1"/>
-      <button id="btn-add-col">Add column</button>
-      <div id="addMsg" class="note"></div>
-    </div>
-    <div class="btns" style="margin-top:6px">
-      <button id="btn-reset">Reset to defaults</button>
-      <button id="btn-save-rpms" title="Download current RPM list as JSON">Save RPMs</button>
-      <button id="btn-load-rpms" title="Load RPM list from JSON file">Load RPMs</button>
-      <input type="file" id="file-rpms" accept=".json,application/json" style="display:none" />
-    </div>
-  </section>
-
-  <section class="panel">
-    <h2>Passive 1) Input: Date &amp; time to drill‑off</h2>
-    <div class="btns" style="margin:8px 0 12px">
-      <button id="btn-clear">Clear all</button>
-      <button id="btn-export">Download results (.csv)</button>
-      <button id="btn-import" title="Load results from CSV">Load results (.csv)</button>
-      <input type="file" id="file-results" accept=".csv,text/csv" style="display:none" />
-      <div id="resultsMsg" class="note" style="margin-left:8px"></div>
-    </div>
-    <div id="empty-state-input" class="note" style="display:none">No RPM columns. Add one above to begin.</div>
-    <div style="overflow:auto; margin-top:8px">
-    <table class="grid" id="tbl-input">
-      <thead>
-        <tr id="thead-input">
-          <th>WOB (klbf)</th>
-        </tr>
-      </thead>
-      <tbody id="tbody-input"></tbody>
-    </table>
-    </div>
-  </section>
-
-  <section class="panel">
-    <h2>Passive 2) Calculated: Drill‑off duration by WOB range (seconds)</h2>
-    <div id="empty-state-calc" class="note" style="display:none">No RPM columns to calculate. Add one above.</div>
-    <div style="overflow:auto; margin-top:8px">
-    <table class="grid" id="tbl-calc">
-      <thead>
-        <tr id="thead-calc">
-          <th>WOB Range (klbf)</th>
-        </tr>
-      </thead>
-      <tbody id="tbody-calc"></tbody>
-    </table>
-    </div>
-  </section>
-
-  <section class="panel">
-    <h2>Passive 3) Fastest drill‑off</h2>
-    <div class="summary" id="summary">
-      <div class="card"><div class="num" id="min-time">–</div><div class="lbl">Time (s)</div></div>
-      <div class="card"><div class="num" id="min-rpm">–</div><div class="lbl">RPM</div></div>
-      <div class="card"><div class="num" id="min-range">–</div><div class="lbl">WOB Range (klbf)</div></div>
-    </div>
-  </section>
-  </div>
-
-  <!-- ACTIVE DRILL-OFF TEST SECTION -->
-  <section class="panel" id="active-test">
-    <h2>Active Drill‑Off Test</h2>
-    <p class="note">Sequence continues from passive optimum RPM & WOB range. Follow steps below.</p>
-    <ol class="note" style="margin-left:20px">
-      <li>Seed optimum RPM and min/max WOB from passive test.</li>
-      <li>Hold each WOB for countdown duration and record ROP (<span id="active-unit-label-seed">m/hr</span>).</li>
-      <li>Select faster WOB (or between if tied).</li>
-      <li>At selected WOB run RPM trials: optimum, −5, +5 (add more if desired).</li>
-      <li>Finalize RPM between two fastest ROPs.</li>
-    </ol>
-    <hr style="border:0; border-top:1px solid var(--grid); margin:12px 0" />
-    <div id="active-seed" class="summary" style="grid-template-columns:repeat(3,minmax(0,1fr)); margin-bottom:12px">
-      <div class="card"><div class="lbl">Optimum RPM</div><div class="num" id="a-seed-rpm">–</div></div>
-      <div class="card"><div class="lbl">WOB Low (klbf)</div><div class="num" id="a-seed-wob-low">–</div></div>
-      <div class="card"><div class="lbl">WOB High (klbf)</div><div class="num" id="a-seed-wob-high">–</div></div>
-    </div>
-    <div class="controls" style="grid-template-columns:repeat(3,max-content); margin-bottom:14px">
-      <label>ROP Unit
-        <select id="ropUnit">
-          <option value="m/hr" selected>m/hr</option>
-          <option value="ft/hr">ft/hr</option>
-        </select>
-      </label>
-      <!-- WOB Step -->
-      <label>WOB Step (klbf)
-        <input type="number" id="wobStep" placeholder="WOB Step" min="0" step="1" value="3" />
-      </label>
-
-      <!-- Active WOB table (generated) -->
-      <div id="active-wob-table" style="overflow:auto; margin-bottom:12px"></div>
-      <div id="active-optwob-display" style="margin-bottom:12px">
-        <div class="card"><div class="lbl">Optimum WOB (klbf)</div><div class="num" id="a-seed-optwob">–</div></div>
       </div>
-      <!-- Optimum RPM trials table: user will enter ROPs for Opt RPM and +/-5 -->
-      <div id="opt-rpm-trials-container" style="overflow:auto; margin-bottom:12px"></div>
 
+      <button id="btn-sample">Load sample data</button>
 
-      <!-- Countdown and status removed -->
+      <div class="btns" style="margin: 8px 0 12px">
+        <button id="btn-clear">Clear all</button>
+        <button id="btn-export">Download results (.csv)</button>
+        <button id="btn-import" title="Load results from CSV">
+          Load results (.csv)
+        </button>
+        <input
+          type="file"
+          id="file-results"
+          accept=".csv,text/csv"
+          style="display: none"
+        />
+        <div id="resultsMsg" class="note" style="margin-left: 8px"></div>
+      </div>
+    </header>
+
+    <div id="passive-test">
+      <h2>Passive Drill‑Off Test</h1>
+      <section class="panel">
+        <h2>Passive Setup: Add custom RPM column</h2>
+        <div class="controls" style="margin: 8px 0 6px">
+          <label for="newRpm">RPM</label>
+          <input
+            type="number"
+            id="newRpm"
+            placeholder="e.g., 175"
+            min="1"
+            step="1"
+          />
+          <button id="btn-add-col">Add column</button>
+          <div id="addMsg" class="note"></div>
+        </div>
+        <div class="btns" style="margin-top: 6px">
+          <button id="btn-reset">Reset to defaults</button>
+          <button id="btn-save-rpms" title="Download current RPM list as JSON">
+            Save RPMs
+          </button>
+          <button id="btn-load-rpms" title="Load RPM list from JSON file">
+            Load RPMs
+          </button>
+          <input
+            type="file"
+            id="file-rpms"
+            accept=".json,application/json"
+            style="display: none"
+          />
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Passive 1) Input: Date &amp; time to drill‑off</h2>
+        
+        <div id="empty-state-input" class="note" style="display: none">
+          No RPM columns. Add one above to begin.
+        </div>
+        <div style="overflow: auto; margin-top: 8px">
+          <table class="grid" id="tbl-input">
+            <thead>
+              <tr id="thead-input">
+                <th>WOB (klbf)</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-input"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>
+          Passive 2) Calculated: Drill‑off duration by WOB range (seconds)
+        </h2>
+        <div id="empty-state-calc" class="note" style="display: none">
+          No RPM columns to calculate. Add one above.
+        </div>
+        <div style="overflow: auto; margin-top: 8px">
+          <table class="grid" id="tbl-calc">
+            <thead>
+              <tr id="thead-calc">
+                <th>WOB Range (klbf)</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-calc"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Passive 3) Fastest drill‑off</h2>
+        <div class="summary" id="summary">
+          <div class="card">
+            <div class="num" id="min-time">–</div>
+            <div class="lbl">Time (s)</div>
+          </div>
+          <div class="card">
+            <div class="num" id="min-rpm">–</div>
+            <div class="lbl">RPM</div>
+          </div>
+          <div class="card">
+            <div class="num" id="min-range">–</div>
+            <div class="lbl">WOB Range (klbf)</div>
+          </div>
+        </div>
+      </section>
     </div>
-    <div id="active-wob-rops" style="margin-bottom:14px; display:none"></div>
-    <!-- RPM Trials section removed -->
-  </section>
 
-  <section class="footer">
-    <p>Contact Son Pham (son.pham2@bakerhughes.com) if needing any clarification or assistance.</p>
-  </section>
 
-<script>
-(function(){
-  // ===== THEME SYSTEM =====
-  const themes = {
-    dark:    {bg:'#0b1324', panel:'#111a33', text:'#e7eefc', muted:'#9db0d5', accent:'#3aa0ff', good:'#1db954', bad:'#ff5c5c', grid:'#223256', btn:'#102446', btn2:'#163462'},
-    light:   {bg:'#f6f8fb', panel:'#ffffff', text:'#0e1a2f', muted:'#4a5b79', accent:'#0b75ff', good:'#1b8e3e', bad:'#d13c3c', grid:'#d7e0f2', btn:'#e8eefb', btn2:'#dbe6fb'},
-    ocean:   {bg:'#071a1f', panel:'#0c2a31', text:'#e7fffb', muted:'#9bd5cf', accent:'#00d1c1', good:'#13c27f', bad:'#ff6b6b', grid:'#184149', btn:'#0f3841', btn2:'#12505b'},
-    bh:      {bg:'#0b1a16', panel:'#0f2a22', text:'#e7f7f3', muted:'#a5cfc3', accent:'#00a36c', good:'#00c389', bad:'#ff6b6b', grid:'#1b4336', btn:'#103a2f', btn2:'#145443'},
-    contrast:{bg:'#000000', panel:'#0a0a0a', text:'#ffffff', muted:'#d0d0d0', accent:'#ffcc00', good:'#00ff84', bad:'#ff3b3b', grid:'#333333', btn:'#121212', btn2:'#1c1c1c'}
-  };
+    <!-- ACTIVE DRILL-OFF TEST SECTION -->
+    <div id="active-test">
+      <h2>Active Drill‑Off Test</h2>
+      <section class="panel" id="active-panel">
 
-  function applyVars(v){
-    const r = document.documentElement.style;
-    for (const [k,val] of Object.entries(v)) r.setProperty(`--${k}`, val);
-    // Ensure picker tokens exist and derive from theme if not explicitly provided
-    if(!v['picker-bg']){
-      const pickerBg = `color-mix(in oklab, ${v.panel || 'var(--panel)'}, white 8%)`;
-      r.setProperty('--picker-bg', pickerBg);
-      r.setProperty('--picker-border', `color-mix(in oklab, ${v.grid || 'var(--grid)'}, white 18%)`);
-      r.setProperty('--picker-hover-bg', `color-mix(in oklab, ${v.panel || 'var(--panel)'}, white 12%)`);
-      r.setProperty('--picker-focus-border', `color-mix(in oklab, ${v.accent || 'var(--accent)'}, white 10%)`);
-      r.setProperty('--picker-focus-ring', `0 0 0 4px color-mix(in oklab, ${v.accent || 'var(--accent)'}, transparent 85%)`);
-      r.setProperty('--picker-disabled-bg', `color-mix(in oklab, ${v.panel || 'var(--panel)'}, black 6%)`);
-      r.setProperty('--picker-disabled-text', `color-mix(in oklab, ${v.text || 'var(--text)'}, black 40%)`);
-    }
-    // Update swatches
-    document.getElementById('sw-bg').style.background = v.bg;
-    document.getElementById('sw-panel').style.background = v.panel;
-    document.getElementById('sw-accent').style.background = v.accent;
-    document.getElementById('sw-text').style.background = v.text;
-  }
+        <p class="note">
+          Sequence continues from passive optimum RPM & WOB range. Follow steps
+          below.
+        </p>
+        <ol class="note" style="margin-left: 20px">
+          <li>Seed optimum RPM and min/max WOB from passive test.</li>
+          <li>
+            Hold each WOB for countdown duration and record ROP (<span
+              id="active-unit-label-seed"
+              >m/hr</span
+            >).
+          </li>
+          <li>Select faster WOB (or between if tied).</li>
+          <li>
+            At selected WOB run RPM trials: optimum, −5, +5 (add more if desired).
+          </li>
+          <li>Finalize RPM between two fastest ROPs.</li>
+        </ol>
+        <hr
+          style="border: 0; border-top: 1px solid var(--grid); margin: 12px 0"
+        />
+        <div
+          class="controls"
+          style="
+            grid-template-columns: repeat(3, max-content);
+            margin-bottom: 14px;
+          "
+        >
+          <!-- ROP Unit control removed -->
+          <!-- WOB Step -->
+          <label
+            >WOB Step (klbf)
+            <input
+              type="number"
+              id="wobStep"
+              placeholder="WOB Step"
+              min="0"
+              step="1"
+              value="5"
+            />
+          </label>
 
-  function getCurrentVars(){
-    const s = getComputedStyle(document.documentElement);
-    return {
-      bg:s.getPropertyValue('--bg').trim(), panel:s.getPropertyValue('--panel').trim(), text:s.getPropertyValue('--text').trim(),
-      muted:s.getPropertyValue('--muted').trim(), accent:s.getPropertyValue('--accent').trim(), good:s.getPropertyValue('--good').trim(),
-      bad:s.getPropertyValue('--bad').trim(), grid:s.getPropertyValue('--grid').trim(), btn:s.getPropertyValue('--btn').trim(), btn2:s.getPropertyValue('--btn2').trim()
-    };
-  }
+          <!-- Active WOB table (generated) -->
+          <div
+            id="active-wob-table"
+            style="overflow: auto; margin-bottom: 12px; grid-column: 1 / -1;"
+          ></div>
 
-  function loadSavedTheme(){
-    const payload = localStorage.getItem('drilloff_theme');
-    if (!payload) { applyVars(themes.ocean); return 'ocean'; } // OCEAN as first-load default
-    const obj = JSON.parse(payload);
-    applyVars(obj.vars); return obj.name || 'custom';
-  }
+          <label
+            >RPM Step (klbf)
+            <input
+              type="number"
+              id="rpmStep"
+              placeholder="RPM Step"
+              min="0"
+              step="1"
+              value="5"
+            />
+          </label>
 
-  function saveTheme(name, vars){ localStorage.setItem('drilloff_theme', JSON.stringify({name, vars})); }
+          <!-- Optimum RPM trials table: user will enter ROPs for Opt RPM and +/-5 -->
+          <div
+            id="opt-rpm-trials-container"
+            style="overflow: auto; margin-bottom: 12px; grid-column: 1 / -1;"
+          ></div>
 
-  const themeSelect = document.getElementById('themeSelect');
-  const customControls = document.getElementById('customControls');
-  const pickPrimary = document.getElementById('cPrimary');
-  const pickAccent  = document.getElementById('cAccent');
-  const pickText    = document.getElementById('cText');
-  const pickPanel   = document.getElementById('cPanel');
+          <div id="derived-opt-rpm-display" class="note" style="margin-bottom:12px">Derived Optimum RPM: –</div>
 
-  function setTheme(name){
-    if (name !== 'custom') { applyVars(themes[name]); saveTheme(name, themes[name]); customControls.style.display='none'; }
-    else { customControls.style.display = 'inline-flex'; const v = getCurrentVars(); pickPrimary.value = toHex(v.bg); pickPanel.value = toHex(v.panel); pickText.value = toHex(v.text); pickAccent.value = toHex(v.accent); }
-  }
-
-  function toHex(color){
-    const ctx = document.createElement('canvas').getContext('2d');
-    ctx.fillStyle = color; const hex = ctx.fillStyle; // normalized hex
-    return /^#/.test(hex) ? hex : '#000000';
-  }
-
-  themeSelect.addEventListener('change', e => setTheme(e.target.value));
-  document.getElementById('btn-theme-reset').addEventListener('click', ()=>{ themeSelect.value='ocean'; setTheme('ocean'); });
-  [pickPrimary, pickPanel, pickText, pickAccent].forEach(inp => inp && inp.addEventListener('input', ()=>{
-    const v = getCurrentVars();
-    v.bg = pickPrimary.value; v.panel = pickPanel.value; v.text = pickText.value; v.accent = pickAccent.value;
-    applyVars(v); saveTheme('custom', v); themeSelect.value='custom';
-  }));
-
-  // Init theme from storage (OCEAN if none saved)
-  const active = loadSavedTheme(); themeSelect.value = active;
-  if (active === 'custom') customControls.style.display='inline-flex';
-
-  // ===== CORE APP (v9 logic retained) =====
-  function allowedWobsForRpm(rpm){ const limit=Math.floor((9000-1)/rpm); const max5=Math.floor(limit/5)*5; if(max5<5) return []; const list=[]; for(let w=max5; w>0; w-=10) list.push(w); return list; }
-  const defaultRpms=[180,190,200,210]; let rpmWobs=new Map(); for(const r of defaultRpms) rpmWobs.set(r, allowedWobsForRpm(r));
-
-  const theadInput=document.getElementById('thead-input'); const tbodyInput=document.getElementById('tbody-input'); const theadCalc=document.getElementById('thead-calc'); const tbodyCalc=document.getElementById('tbody-calc'); const emptyInput=document.getElementById('empty-state-input'); const emptyCalc=document.getElementById('empty-state-calc');
-
-  // ===== STATE PRESERVATION HELPERS (added v10 refactor) =====
-  function captureInputState(){
-    const snap={};
-    for(const rpm of allRpms()){
-      const wobs=rpmWobs.get(rpm)||[]; snap[rpm]={};
-      for(const wob of wobs){ const el=document.getElementById(inputId(rpm, wob)); if(el) snap[rpm][wob]=el.value; }
-    }
-    return snap;
-  }
-  function filterSnapshot(snapshot, currentMap){
-    const out={};
-    for(const [rpm, wobs] of currentMap.entries()){
-      if(!snapshot[rpm]) continue; const obj={};
-      for(const wob of wobs){ if(Object.prototype.hasOwnProperty.call(snapshot[rpm], wob)) obj[wob]=snapshot[rpm][wob]; }
-      out[rpm]=obj;
-    }
-    return out;
-  }
-  function restoreInputState(snapshot){
-    for(const rpmKey of Object.keys(snapshot)){
-      const wobObj=snapshot[rpmKey];
-      for(const wobKey of Object.keys(wobObj)){
-        const el=document.getElementById(inputId(Number(rpmKey), Number(wobKey)));
-        if(el) el.value=wobObj[wobKey];
-      }
-    }
-  }
-
-  const uniqSortedDesc=arr=>Array.from(new Set(arr)).sort((a,b)=>b-a); const allRpms=()=>Array.from(rpmWobs.keys()).sort((a,b)=>a-b); const wobUniverse=()=>uniqSortedDesc([].concat(...Array.from(rpmWobs.values())));
-  const rangeUniverse=()=>{ const set=new Set(); for(const [,w] of rpmWobs) for(let i=0;i<w.length-1;i++) set.add(`${w[i]}-${w[i+1]}`); return Array.from(set).sort((a,b)=>{ const [ah,al]=a.split('-').map(Number); const [bh,bl]=b.split('-').map(Number); if(ah!==bh) return bh-ah; return bl-al; }); };
-  const cellId=(hi,lo,rpm)=>`d_${hi}_${lo}_${rpm}`; const inputId=(rpm,wob)=>`t_${rpm}_${wob}`; const pad2=n=>String(n).padStart(2,'0'); const todayISODate=()=>{ const d=new Date(); return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; };
-  const parseDT=v=>{ if(!v) return NaN; const t=new Date(v), x=t.getTime(); return Number.isNaN(x)?NaN:Math.floor(x/1000); }; const formatSec=x=>Number.isFinite(x)?Math.round(x*1000)/1000:'';
-
-  function updateEmptyStates(){ const has=allRpms().length>0; emptyInput.style.display=has?'none':'block'; emptyCalc.style.display=has?'none':'block'; }
-
-  function renderHeaders(){ theadInput.querySelectorAll('th:not(:first-child)').forEach(n=>n.remove()); theadCalc.querySelectorAll('th:not(:first-child)').forEach(n=>n.remove()); for(const rpm of allRpms()){ const mk=()=>{ const th=document.createElement('th'); const wrap=document.createElement('div'); wrap.className='rpmHdr'; const lbl=document.createElement('span'); lbl.textContent=`${rpm} RPM`; const del=document.createElement('button'); del.className='delBtn'; del.title=`Remove RPM ${rpm}`; del.textContent='×'; del.addEventListener('click',()=>removeRpm(rpm)); wrap.appendChild(lbl); wrap.appendChild(del); th.appendChild(wrap); return th; }; theadInput.appendChild(mk()); theadCalc.appendChild(mk()); } updateEmptyStates(); }
-
-  function ensureInputRow(wob){ let tr=tbodyInput.querySelector(`tr[data-wob="${wob}"]`); if(tr) return tr; tr=document.createElement('tr'); tr.dataset.wob=String(wob); const th=document.createElement('th'); th.className='rowhdr'; th.textContent=wob; tr.appendChild(th); for(const rpm of allRpms()) tr.appendChild(buildInputCell(rpm, wob)); const rows=Array.from(tbodyInput.querySelectorAll('tr')); const idx=rows.findIndex(r=>Number(r.dataset.wob)<wob); if(idx===-1) tbodyInput.appendChild(tr); else tbodyInput.insertBefore(tr, rows[idx]); return tr; }
-  function buildInputCell(rpm,wob){ const td=document.createElement('td'); const allowed=(rpmWobs.get(rpm)||[]).includes(wob); if(allowed){ const wrap=document.createElement('div'); wrap.className='pickerWrap'; const inp=document.createElement('input'); inp.type='datetime-local'; inp.step=1; inp.placeholder='YYYY-MM-DDThh:mm:ss'; inp.id=inputId(rpm,wob); inp.addEventListener('change', recalc); // Accessibility: hint and label on the input (picker button removed)
-    inp.title = 'Open date/time picker'; inp.setAttribute('aria-label','Date and time'); wrap.appendChild(inp); td.appendChild(wrap); } else { td.textContent='—'; td.style.opacity=.5; } return td; }
-  function renderInputTable(){ tbodyInput.innerHTML=''; for(const wob of wobUniverse()) ensureInputRow(wob); tbodyInput.querySelectorAll('tr').forEach(tr=>{ const wob=Number(tr.dataset.wob); tr.querySelectorAll('td').forEach(td=>td.remove()); for(const rpm of allRpms()) tr.appendChild(buildInputCell(rpm, wob)); }); updateEmptyStates(); }
-  function renderCalcTable(){ tbodyCalc.innerHTML=''; for(const label of rangeUniverse()){ const [hi,lo]=label.split('-').map(Number); const tr=document.createElement('tr'); const th=document.createElement('th'); th.className='rowhdr'; th.textContent=`${hi} - ${lo}`; tr.appendChild(th); for(const rpm of allRpms()){ const td=document.createElement('td'); td.id=cellId(hi,lo,rpm); tr.appendChild(td);} tbodyCalc.appendChild(tr);} updateEmptyStates(); }
-
-  function recalc(){ document.querySelectorAll('.colMin, .globalMin').forEach(el=>el.classList.remove('colMin','globalMin')); const durations=[]; for(const rpm of allRpms()){ const wobs=rpmWobs.get(rpm)||[]; let rpmMin={val:Infinity, cell:null}; for(let i=0;i<wobs.length-1;i++){ const hi=wobs[i], lo=wobs[i+1]; const tHi=parseDT((document.getElementById(inputId(rpm, hi))||{}).value); const tLo=parseDT((document.getElementById(inputId(rpm, lo))||{}).value); const td=document.getElementById(cellId(hi, lo, rpm)); let val=''; if(Number.isFinite(tHi)&&Number.isFinite(tLo)){ const diff=tLo-tHi; if(diff>=0){ val=diff; if(diff<rpmMin.val){ rpmMin={val:diff, cell:td}; } durations.push({rpm, range:`${hi}-${lo}`, seconds:diff}); } else { val='Invalid (negative)'; } } if(td) td.textContent= typeof val==='number'? formatSec(val) : val; } if(rpmMin.cell) rpmMin.cell.classList.add('colMin'); }
-    const minTime=document.getElementById('min-time'); const minRpm=document.getElementById('min-rpm'); const minRange=document.getElementById('min-range'); const valid=durations.filter(d=>Number.isFinite(d.seconds)); if(valid.length){ valid.sort((a,b)=>a.seconds-b.seconds); const best=valid[0]; minTime.textContent=formatSec(best.seconds); minRpm.textContent=String(best.rpm); minRange.textContent=best.range.replace('-', ' - '); const bestCell=document.getElementById(`d_${best.range.replace('-','_')}_${best.rpm}`); if(bestCell) bestCell.classList.add('globalMin'); } else { minTime.textContent='–'; minRpm.textContent='–'; minRange.textContent='–'; } updateEmptyStates(); // propagate passive results into Active seed
-    try{ updateActiveSeed(); }catch(e){}
-    return durations; }
-  // ===== ACTIVE TEST STATE & HELPERS =====
-  const activeState = {
-    initialized:false,
-    optRpm:null,
-    wobLow:null,
-    wobHigh:null,
-    selectedWob:null,
-    ropLow:null,
-    ropHigh:null,
-    countdownMinutes:5,
-    countdownEnd:null,
-    countdownTimer:null,
-    ropUnit:'m/hr',
-    rpmTrials:[], // {rpm, rop:null, countdownEnd:null, timer:null, elRow}
-    finalRpm:null,
-    // per-WOB ROP map: { '<wob>': <rop> }
-    wobRops: {}
-  };
-
-  function updateActiveSeed(){
-    const rpmTxt=document.getElementById('min-rpm')?.textContent||'–';
-    const rangeTxt=document.getElementById('min-range')?.textContent||''; // format "HI - LO"
-    if(!rpmTxt || rpmTxt==='–' || !rangeTxt.includes('-')) return; // need passive optimum
-    const [hiStr, loStr] = rangeTxt.split('-').map(s=>s.trim());
-    const hi = Number(hiStr); const lo = Number(loStr);
-    if(!Number.isFinite(hi) || !Number.isFinite(lo)) return;
-    activeState.optRpm = Number(rpmTxt);
-    activeState.wobLow = lo; activeState.wobHigh = hi;
-    document.getElementById('a-seed-rpm').textContent = String(activeState.optRpm);
-    document.getElementById('a-seed-wob-low').textContent = String(activeState.wobLow);
-    document.getElementById('a-seed-wob-high').textContent = String(activeState.wobHigh);
-    // Selected WOB input removed from UI — set a sensible default if not already set
-    if(!Number.isFinite(activeState.selectedWob)){
-      activeState.selectedWob = activeState.wobLow;
-    }
-    if(!activeState.initialized){ initActiveTrials(); activeState.initialized=true; }
-    refreshFinalizeState();
-    // Build or refresh Active WOB table and Opt RPM trials whenever the seed updates
-    try{ renderActiveWobTable(); }catch(e){}
-    try{ renderOptimumRpmTrialsTable(); }catch(e){}
-  }
-
-  // Render Active WOB table based on activeState.wobLow, wobHigh, optRpm and #wobStep
-  function renderActiveWobTable(){
-    const container = document.getElementById('active-wob-table'); if(!container) return;
-    // Preserve existing values
-    const existing = {};
-    container.querySelectorAll && container.querySelectorAll('[data-wob]').forEach(el=>{ const w = el.getAttribute('data-wob'); if(w){ const v = el.value; if(v!=='') existing[w]=v; } });
-
-    const opt = Number(activeState.optRpm);
-    const low = Number(activeState.wobLow);
-    const high = Number(activeState.wobHigh);
-    let step = Number(document.getElementById('wobStep').value);
-    if(!Number.isFinite(step) || step<=0) step = 3;
-    // Clear if missing data
-    if(!Number.isFinite(opt) || !Number.isFinite(low) || !Number.isFinite(high)){
-      container.innerHTML = '';
-      return;
-    }
-
-    // Ensure low <= high
-    let start = low, end = high; if(start> end){ start = high; end = low; }
-
-    const columns = [];
-    // Build stepped columns starting at `start` and continue until value >= end.
-    const roundVal = v => Math.round(v*1000)/1000;
-    let v = roundVal(start);
-    let safety = 0;
-    // Only include WOB values where wob * optRpm < 9000. Stop when a stepped wob would violate the constraint.
-    while(safety < 500){
-      // If this wob violates wob * rpm < 9000, break (larger wobs will also violate)
-      if(!(v * opt < 9000)) break;
-      columns.push(v);
-      if(v >= end) break;
-      v = roundVal(v + step);
-      safety++;
-    }
-    if(columns.length === 0){
-      container.innerHTML = '<div class="note">No acceptable WOB values (WOB × RPM must be &lt; 9000).</div>';
-      return;
-    }
-
-    // Build table
-    const tbl = document.createElement('table'); tbl.className='grid'; tbl.id='tbl-active-wob';
-    const thead = document.createElement('thead'); const trh = document.createElement('tr');
-    const th0 = document.createElement('th'); th0.textContent='Optimum RPM'; trh.appendChild(th0);
-    for(const wob of columns){ const th = document.createElement('th'); th.textContent = `${wob} klbf`; trh.appendChild(th); }
-    thead.appendChild(trh); tbl.appendChild(thead);
-
-    const tbody = document.createElement('tbody'); const tr = document.createElement('tr');
-    const tdRpm = document.createElement('th'); tdRpm.className='rowhdr'; tdRpm.textContent = String(opt); tr.appendChild(tdRpm);
-    for(const wob of columns){ const td = document.createElement('td');
-      const inp = document.createElement('input'); inp.type='number'; inp.step='0.1'; inp.placeholder='ROP'; inp.setAttribute('data-wob', String(wob)); inp.id=`awob_${wob}`;
-      // restore from activeState.wobRops or preserved existing values
-      if(Object.prototype.hasOwnProperty.call(activeState.wobRops, wob)) inp.value = activeState.wobRops[wob];
-      else if(existing[String(wob)]) inp.value = existing[String(wob)];
-      inp.addEventListener('change', ()=>{ const val = inp.value; if(val===''||!Number.isFinite(Number(val))){ delete activeState.wobRops[wob]; } else { activeState.wobRops[wob]=Number(val); } refreshFinalizeState(); computeOptimumWobFromTable(); });
-      td.appendChild(inp); tr.appendChild(td);
-    }
-    tbody.appendChild(tr); tbl.appendChild(tbody);
-
-    // Replace container contents
-    container.innerHTML=''; container.appendChild(tbl);
-
-    // Update optimum WOB after rendering table
-    try{ computeOptimumWobFromTable(); }catch(e){}
-  }
-
-  // Render a small table for Optimum RPM trials: Opt RPM, Opt-5, Opt+5
-  function renderOptimumRpmTrialsTable(){
-    const container = document.getElementById('opt-rpm-trials-container'); if(!container) return;
-    container.innerHTML = '';
-    const opt = Number(activeState.optRpm);
-    if(!Number.isFinite(opt)) return;
-    const rpms = [opt-5, opt, opt+5].filter(r=>r>0).map(r=>Math.round(r));
-
-    const tbl = document.createElement('table'); tbl.className='grid';
-    const thead = document.createElement('thead'); const trh=document.createElement('tr'); trh.appendChild(document.createElement('th'));
-    for(const r of rpms){ const th=document.createElement('th'); th.textContent = `${r} RPM`; trh.appendChild(th); }
-    thead.appendChild(trh); tbl.appendChild(thead);
-
-    const tbody=document.createElement('tbody'); const tr=document.createElement('tr'); const th0=document.createElement('th'); th0.className='rowhdr'; th0.textContent = `${activeState.selectedWob||'WOB'}`; tr.appendChild(th0);
-    for(const r of rpms){ const td=document.createElement('td'); const inp=document.createElement('input'); inp.type='number'; inp.step='0.1'; inp.placeholder='ROP'; inp.id=`opt_r_${r}`;
-      // Restore if present in activeState.optTrials
-      if(activeState.optTrials && activeState.optTrials[r]!==undefined) inp.value = activeState.optTrials[r];
-      inp.addEventListener('change', ()=>{ const v=inp.value; if(v===''||!Number.isFinite(Number(v))){ if(activeState.optTrials) delete activeState.optTrials[r]; } else { activeState.optTrials = activeState.optTrials || {}; activeState.optTrials[r]=Number(v); } refreshFinalizeState(); });
-      td.appendChild(inp); tr.appendChild(td);
-    }
-    tbody.appendChild(tr); tbl.appendChild(tbody);
-    container.appendChild(tbl);
-  }
-
-  // Compute optimum WOB by selecting the two ROPs that give the highest WOBs
-  function computeOptimumWobFromTable(){
-    // activeState.wobRops: { wob: rop }
-    const entries = Object.keys(activeState.wobRops).map(k=>({wob:Number(k), rop:Number(activeState.wobRops[k])})).filter(e=>Number.isFinite(e.wob) && Number.isFinite(e.rop));
-    if(entries.length < 2){ document.getElementById('a-seed-optwob').textContent='–'; return null; }
-    // We need to select the two ROPs which give the highest WOB — interpreted as pick the two entries with highest ROP values,
-    // then compute optimum WOB as average of their WOBs.
-    entries.sort((a,b)=>b.rop - a.rop);
-    const top = entries.slice(0,2);
-    const opt = (top[0].wob + top[1].wob)/2;
-    const rounded = Math.round(opt*100)/100;
-    activeState.selectedWob = rounded;
-    document.getElementById('a-seed-optwob').textContent = String(rounded);
-    return rounded;
-  }
-
-  function initActiveTrials(){
-    // Seed trials with optRpm-5, optRpm, optRpm+5 (only positive RPMs)
-    const base=activeState.optRpm; if(!Number.isFinite(base)) return;
-    const seeds=[base-5, base, base+5].filter(r=>r>0);
-    for(const r of seeds){ addTrialRow(r); }
-  }
-
-  function addTrialRow(rpm){
-    if(activeState.rpmTrials.some(t=>t.rpm===rpm)) return; // avoid duplicates
-    const tbody=document.getElementById('tbody-active-trials');
-    if(!tbody) return; // RPM Trials UI removed — no-op
-    const tr=document.createElement('tr'); tr.dataset.rpm=String(rpm);
-    const tdRpm=document.createElement('td'); tdRpm.textContent=String(rpm); tr.appendChild(tdRpm);
-    const tdRop=document.createElement('td');
-    const inp=document.createElement('input'); inp.type='number'; inp.min='0'; inp.step='0.1'; inp.disabled=true; inp.addEventListener('change', ()=>{ const trial=activeState.rpmTrials.find(t=>t.rpm===rpm); if(trial) trial.rop = Number(inp.value)||null; refreshFinalizeState(); });
-    tdRop.appendChild(inp); tr.appendChild(tdRop);
-    const tdCountdown=document.createElement('td');
-    const btnStart=document.createElement('button'); btnStart.textContent='Start'; btnStart.addEventListener('click', ()=>startTrialCountdown(rpm, btnStart, inp)); tdCountdown.appendChild(btnStart);
-    tr.appendChild(tdCountdown);
-    const tdRemove=document.createElement('td'); const btnDel=document.createElement('button'); btnDel.textContent='×'; btnDel.className='delBtn'; btnDel.addEventListener('click', ()=>{ activeState.rpmTrials=activeState.rpmTrials.filter(t=>t.rpm!==rpm); tr.remove(); refreshFinalizeState(); }); tdRemove.appendChild(btnDel); tr.appendChild(tdRemove);
-    tbody.appendChild(tr);
-    activeState.rpmTrials.push({rpm, rop:null, elRow:tr, countdownEnd:null, timer:null});
-  }
-
-  function startTrialCountdown(rpm, btn, ropInput){
-    if(activeState.countdownTimer){ /* allow parallel? keep independent */ }
-    const minutes = activeState.countdownMinutes;
-    const end = Date.now() + minutes*60000;
-    btn.disabled=true; ropInput.disabled=true; btn.textContent='Running';
-    const trial=activeState.rpmTrials.find(t=>t.rpm===rpm); if(trial){ trial.countdownEnd=end; }
-    const tick=()=>{
-      const remain = end - Date.now();
-      if(remain<=0){ clearInterval(trial.timer); btn.textContent='Done'; ropInput.disabled=false; btn.disabled=true; refreshFinalizeState(); return; }
-      btn.textContent = Math.ceil(remain/1000)+'s';
-    };
-    trial.timer=setInterval(tick,1000); tick();
-  }
-
-  // Global WOB selection and countdown removed — Active seed will use passive results
-
-  function refreshFinalizeState(){
-    // Update unit labels
-    const ropLabelEl = document.getElementById('rop-unit-label');
-    if(ropLabelEl) ropLabelEl.textContent = activeState.ropUnit;
-    const activeSeedLabelEl = document.getElementById('active-unit-label-seed');
-    if(activeSeedLabelEl) activeSeedLabelEl.textContent = activeState.ropUnit;
-    // Button enable conditions
-    const finalizeBtn=document.getElementById('btn-finalize-active');
-    const trialsWithRop = activeState.rpmTrials.filter(t=>Number.isFinite(t.rop));
-    // Require at least two trials with ROP; Selected WOB removed from UI so don't require it here
-    if(finalizeBtn) finalizeBtn.disabled = trialsWithRop.length < 2;
-  }
-
-  function finalizeActiveRpm(){
-    const data = activeState.rpmTrials.filter(t=>Number.isFinite(t.rop));
-    if(data.length<2){ const el=document.getElementById('active-final-summary'); if(el) el.textContent='Need at least two ROP trials.'; return; }
-    data.sort((a,b)=>b.rop-a.rop); const top=data.slice(0,2);
-    const final = Math.round((top[0].rpm + top[1].rpm)/2);
-    activeState.finalRpm=final;
-    const outEl=document.getElementById('active-final-summary'); if(outEl) outEl.textContent=`Fastest trials RPMs: ${top[0].rpm} (${top[0].rop} ${activeState.ropUnit}), ${top[1].rpm} (${top[1].rop} ${activeState.ropUnit}). Final RPM: ${final}`;
-  }
-
-  // ===== ACTIVE UI EVENT BINDINGS =====
-  document.getElementById('ropUnit').addEventListener('change', e=>{ activeState.ropUnit=e.target.value; refreshFinalizeState(); });
-  // Countdown and select WOB controls removed; no listeners required
-  const btnAddTrial = document.getElementById('btn-add-trial');
-  if(btnAddTrial){
-    btnAddTrial.addEventListener('click', ()=>{
-      const trialInput = document.getElementById('trial-rpm');
-      const hintEl = document.getElementById('rpmTrialsHint');
-      const v = Number(trialInput ? trialInput.value : NaN);
-      if(!Number.isFinite(v)||v<=0){ if(hintEl) hintEl.textContent='Enter valid RPM to add.'; return; }
-      addTrialRow(v);
-      if(trialInput) trialInput.value='';
-      refreshFinalizeState();
-    });
-  }
-  const btnFinalizeActive = document.getElementById('btn-finalize-active');
-  if(btnFinalizeActive) btnFinalizeActive.addEventListener('click', finalizeActiveRpm);
-
-  // WOB Step change should re-render the Active WOB table
-  document.getElementById('wobStep').addEventListener('change', ()=>{ try{ renderActiveWobTable(); }catch(e){} });
-
-  // Hook passive recalc to seed active
-  const originalRecalc = recalc;
-  // Already defined recalc above; we call updateActiveSeed after initial render
-  updateActiveSeed();
-
-  function addCustomRpm(){ const rpmVal=Number(document.getElementById('newRpm').value); const msg=document.getElementById('addMsg'); msg.textContent=''; if(!Number.isFinite(rpmVal)||rpmVal<=0){ msg.textContent='Enter a valid RPM (>0).'; return; } if(rpmWobs.has(rpmVal)){ msg.textContent=`RPM ${rpmVal} already exists.`; return; } const wobs=(function(r){ const limit=Math.floor((9000-1)/r); const max5=Math.floor(limit/5)*5; if(max5<5) return []; const out=[]; for(let w=max5; w>0; w-=10) out.push(w); return out; })(rpmVal); if(wobs.length===0){ msg.textContent=`Cannot add RPM ${rpmVal}: even 5 klbf violates WOB×RPM<9000.`; return; }
-    const snapshot=captureInputState();
-    rpmWobs.set(rpmVal, wobs); renderHeaders(); renderInputTable(); renderCalcTable();
-    restoreInputState(filterSnapshot(snapshot, rpmWobs)); recalc();
-    msg.textContent=`Added RPM ${rpmVal}. Allowed WOB inputs (every 10 from max): ${wobs.join(', ')}`; }
-  function removeRpm(rpm){ if(!rpmWobs.has(rpm)) return; const snapshot=captureInputState(); rpmWobs.delete(rpm); renderHeaders(); renderInputTable(); renderCalcTable(); restoreInputState(filterSnapshot(snapshot, rpmWobs)); recalc(); }
-  function resetDefaults(){ const snapshot=captureInputState(); rpmWobs = new Map(); for(const r of defaultRpms) rpmWobs.set(r, (function(r){ const limit=Math.floor((9000-1)/r); const max5=Math.floor(limit/5)*5; if(max5<5) return []; const out=[]; for(let w=max5; w>0; w-=10) out.push(w); return out; })(r)); renderHeaders(); renderInputTable(); renderCalcTable(); restoreInputState(filterSnapshot(snapshot, rpmWobs)); recalc(); document.getElementById('addMsg').textContent='Reset to default RPMs.'; }
-
-  // ===== SAVE / LOAD RPMs (timestamps cleared on load) =====
-  function saveRpms(){
-    const msg=document.getElementById('addMsg');
-    const rpms=allRpms();
-    if(!rpms.length){ msg.textContent='No RPMs to save.'; return; }
-    const payload={ rpms, meta:{ version:10, savedAt:new Date().toISOString() } };
-    try {
-      const blob=new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
-      const a=document.createElement('a');
-      a.href=URL.createObjectURL(blob);
-      a.download='drill_off_rpms.json';
-      a.click();
-      URL.revokeObjectURL(a.href);
-      msg.textContent='Saved RPM list.';
-    } catch(err){
-      msg.textContent='Save error: '+err.message;
-    }
-  }
-
-  function loadRpmsFile(evt){
-    const msg=document.getElementById('addMsg');
-    const file=evt.target.files && evt.target.files[0];
-    if(!file){ msg.textContent='No file selected.'; return; }
-    const reader=new FileReader();
-    reader.onerror=()=>{ msg.textContent='Failed to read file.'; evt.target.value=''; };
-    reader.onload=()=>{
-      try {
-        const text=reader.result;
-        const obj=JSON.parse(text);
-        if(!obj || !Array.isArray(obj.rpms)) throw new Error('Missing rpms array.');
-        const incoming=obj.rpms.slice();
-        if(!incoming.length) throw new Error('Empty RPM list.');
-        const seen=new Set();
-        for(const r of incoming){
-          if(!Number.isFinite(r) || r<=0 || Math.round(r)!==r) throw new Error(`Invalid RPM: ${r}`);
-          if(seen.has(r)) throw new Error(`Duplicate RPM: ${r}`);
-          seen.add(r);
-          const w=allowedWobsForRpm(r);
-          if(w.length===0) throw new Error(`RPM ${r} violates WOB×RPM<9000 rule.`);
-        }
-        const current=allRpms();
-        const anyTimestamps = Array.from(document.querySelectorAll('#tbl-input input[type=datetime-local]')).some(inp=>inp.value);
-        const differs = incoming.length!==current.length || incoming.some((r,i)=>r!==current[i]);
-        if(differs && anyTimestamps){
-          if(!confirm('Replace current RPMs? All timestamps will be cleared.')){ msg.textContent='Load cancelled.'; evt.target.value=''; return; }
-        }
-        // Replace RPM map
-        rpmWobs = new Map();
-        for(const r of incoming) rpmWobs.set(r, allowedWobsForRpm(r));
-        renderHeaders();
-        renderInputTable();
-        renderCalcTable();
-        // All timestamps cleared implicitly by re-render; recalc will just refresh summary
-        recalc();
-      } catch(err){
-        msg.textContent='Load error: '+(err&&err.message?err.message:String(err));
-      } finally {
-        evt.target.value='';
-      }
-    };
-    reader.readAsText(file);
-  }
-
-  document.getElementById('btn-add-col').addEventListener('click', addCustomRpm);
-  document.getElementById('btn-reset').addEventListener('click', resetDefaults);
-  // 'Recalculate' button removed as it's redundant; recalc() is called on input change
-  document.getElementById('btn-clear').addEventListener('click', ()=>{ document.querySelectorAll('#tbl-input input[type=datetime-local]').forEach(inp=>inp.value=''); recalc(); });
-  document.getElementById('btn-sample').addEventListener('click', ()=>{ const day=todayISODate(); const sample={180:{45:`${day}T08:15:15`,35:`${day}T08:17:35`,25:`${day}T08:20:20`,15:`${day}T08:20:45`,5:`${day}T08:21:10`},190:{45:`${day}T08:29:10`,35:`${day}T08:30:00`,25:`${day}T08:32:10`,15:`${day}T08:33:50`,5:`${day}T08:34:30`},200:{40:`${day}T08:35:10`,30:`${day}T08:40:10`,20:`${day}T08:50:11`,10:`${day}T08:51:10`},210:{40:`${day}T09:11:30`,30:`${day}T09:12:30`,20:`${day}T09:13:40`,10:`${day}T09:14:10`}}; for(const rpm of Object.keys(sample)){ for(const wob of Object.keys(sample[rpm])){ const el=document.getElementById(inputId(rpm, wob)); if(el) el.value=sample[rpm][wob]; } } recalc(); });
-  document.getElementById('btn-export').addEventListener('click', ()=>{ const durations=recalc(); const lines=['RPM,WOB Range (klbf),Seconds']; for(const d of durations) lines.push(`${d.rpm},${d.range},${Math.round(d.seconds*1000)/1000}`); const minT=document.getElementById('min-time').textContent; const minR=document.getElementById('min-rpm').textContent; const minW=document.getElementById('min-range').textContent.replace(' ',''); if(minT!=='–'){ lines.push(''); lines.push(`Minimum,${minR},${minW},${minT}`);} const blob=new Blob([lines.join('\n')],{type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='drill_off_results.csv'; a.click(); URL.revokeObjectURL(a.href); });
-
-  // Extended export: include META and TIMESTAMPS section listing all allowed WOBs (blank if unset)
-  document.getElementById('btn-export').addEventListener('click', ()=>{
-    const durations=recalc();
-    const metaLine = `META,version=3,generated=${new Date().toISOString()}`;
-    const lines=[metaLine, ''];
-    // PASSIVE RESULTS
-    lines.push('RPM,WOB Range (klbf),Seconds');
-    for(const d of durations) lines.push(`${d.rpm},${d.range},${Math.round(d.seconds*1000)/1000}`);
-    const minT=document.getElementById('min-time').textContent; const minR=document.getElementById('min-rpm').textContent; const minW=document.getElementById('min-range').textContent.replace(' ','');
-    if(minT!=='–'){ lines.push(''); lines.push(`Minimum,${minR},${minW},${minT}`); }
-    // TIMESTAMPS section
-    lines.push(''); lines.push('TIMESTAMPS');
-    lines.push('RPM,WOB,Timestamp');
-    for(const rpm of allRpms()){
-      const wobs = rpmWobs.get(rpm) || [];
-      for(const wob of wobs){ const el=document.getElementById(inputId(rpm,wob)); const val=el?el.value:''; lines.push(`${rpm},${wob},${val}`); }
-    }
-    // ACTIVE TEST SECTIONS
-    lines.push(''); lines.push('ACTIVE-SETTINGS');
-    lines.push(`Unit,${activeState.ropUnit}`);
-    lines.push(`CountdownMinutes,${activeState.countdownMinutes}`);
-    lines.push(''); lines.push('ACTIVE-WOB-ROPS');
-    lines.push('WOBType,WOBklbf,ROP');
-    lines.push(`Low,${activeState.wobLow||''},${activeState.ropLow||''}`);
-    lines.push(`High,${activeState.wobHigh||''},${activeState.ropHigh||''}`);
-    lines.push(`Selected,${activeState.selectedWob||''},`);
-    lines.push(''); lines.push('ACTIVE-RPM-TRIALS');
-    lines.push('RPM,ROP');
-    for(const t of activeState.rpmTrials){ lines.push(`${t.rpm},${Number.isFinite(t.rop)?t.rop:''}`); }
-    lines.push(''); lines.push('ACTIVE-SUMMARY');
-    lines.push(`FinalRPM,${activeState.finalRpm||''}`);
-    const blob=new Blob([lines.join('\n')],{type:'text/csv'});
-    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='drill_off_results.csv'; a.click(); URL.revokeObjectURL(a.href);
-  });
-
-  // CSV parsing & import
-  function parseResultsCsv(text){
-    const lines = text.split(/\r?\n/).map(l=>l.trim());
-    const out={meta:null,durations:[],timestamps:{},legacy:false,errors:[],active:{}};
-    let i=0;
-    // optional META line
-    if(lines[i] && lines[i].startsWith('META,')){
-      out.meta = lines[i].slice(5);
-      i++;
-      if(lines[i]==='') i++; // skip blank
-    }
-    // Read durations until TIMESTAMPS or end
-    if(!(lines[i] && lines[i].startsWith('RPM,'))){ out.errors.push('Missing durations header'); }
-    // skip header
-    if(lines[i] && lines[i].startsWith('RPM,')) i++;
-    for(; i<lines.length; i++){
-      const ln = lines[i];
-      if(!ln) continue;
-      if(ln==='TIMESTAMPS') { i++; break; }
-      if(ln.startsWith('Minimum,')) { out.durations.push({summary:ln}); continue; }
-      const parts = ln.split(','); if(parts.length<3){ out.errors.push(`Bad duration line: ${ln}`); continue; }
-      const rpm = Number(parts[0]); const range = parts[1]; const seconds = Number(parts[2]); if(!Number.isFinite(rpm) || !range){ out.errors.push(`Invalid duration row: ${ln}`); continue; }
-      out.durations.push({rpm,range,seconds});
-    }
-    // If we reached EOF without TIMESTAMPS => legacy
-    if(i>=lines.length){ out.legacy=true; return out; }
-    // Now expect TIMESTAMPS header row
-    if(!(lines[i] && lines[i].startsWith('RPM,'))){ out.errors.push('Missing TIMESTAMPS header'); return out; }
-    i++;
-    for(; i<lines.length; i++){
-      const ln=lines[i]; if(!ln) continue; // Section switches
-      if(ln==='ACTIVE-SETTINGS'){ i++; while(i<lines.length && lines[i] && !lines[i].startsWith('ACTIVE-')){ const p=lines[i].split(','); if(p[0]==='Unit') out.active.unit=p[1]; else if(p[0]==='CountdownMinutes') out.active.countdownMinutes=Number(p[1]); i++; } i--; continue; }
-      if(ln==='ACTIVE-WOB-ROPS'){ i++; out.active.wobRops=[]; while(i<lines.length && lines[i] && !lines[i].startsWith('ACTIVE-')){ const p=lines[i].split(','); if(p.length>=3) out.active.wobRops.push({type:p[0], wob:Number(p[1]), rop:p[2]}); i++; } i--; continue; }
-      if(ln==='ACTIVE-RPM-TRIALS'){ i++; out.active.rpmTrials=[]; while(i<lines.length && lines[i] && !lines[i].startsWith('ACTIVE-')){ const p=lines[i].split(','); if(p.length>=2) out.active.rpmTrials.push({rpm:Number(p[0]), rop:p[1]}); i++; } i--; continue; }
-      if(ln==='ACTIVE-SUMMARY'){ i++; out.active.summary={}; while(i<lines.length && lines[i] && !lines[i].startsWith('ACTIVE-')){ const p=lines[i].split(','); if(p[0]==='FinalRPM') out.active.summary.finalRpm = Number(p[1]); i++; } i--; continue; }
-      const parts=ln.split(','); if(parts.length<3){ out.errors.push(`Bad timestamp line: ${ln}`); continue; }
-      const rpm=Number(parts[0]); const wob=Number(parts[1]); const ts=parts.slice(2).join(',') || ''; if(!Number.isFinite(rpm) || !Number.isFinite(wob)){ out.errors.push(`Invalid timestamp row: ${ln}`); continue; }
-      if(!out.timestamps[rpm]) out.timestamps[rpm]={}; out.timestamps[rpm][wob]=ts;
-    }
-    return out;
-  }
-
-  function applyImportedDurations(durations){
-    // Clear any previous cell text
-    document.querySelectorAll('#tbl-calc td').forEach(td=>td.textContent='');
-    const byRpm = {};
-    for(const d of durations){ if(d && d.rpm){ if(!byRpm[d.rpm]) byRpm[d.rpm]=[]; byRpm[d.rpm].push(d); } }
-    const collected=[];
-    for(const rpmStr of Object.keys(byRpm)){
-      const arr=byRpm[rpmStr];
-      for(const rec of arr){ const cellIdStr = `d_${rec.range.replace('-','_')}_${rec.rpm}`; const td=document.getElementById(cellIdStr); if(td){ td.textContent=Number.isFinite(rec.seconds)?formatSec(rec.seconds):rec.seconds; if(Number.isFinite(rec.seconds)) collected.push({rpm:rec.rpm, range:rec.range, seconds:rec.seconds}); } }
-    }
-    // recompute global min from imported durations
-    const valid = collected.filter(d=>Number.isFinite(d.seconds));
-    document.querySelectorAll('.colMin, .globalMin').forEach(el=>el.classList.remove('colMin','globalMin'));
-    for(const rpm of allRpms()){
-      const col = valid.filter(d=>d.rpm===Number(rpm)).sort((a,b)=>a.seconds-b.seconds);
-      if(col.length){ const best=col[0]; const td=document.getElementById(`d_${best.range.replace('-','_')}_${best.rpm}`); if(td) td.classList.add('colMin'); }
-    }
-    if(valid.length){ valid.sort((a,b)=>a.seconds-b.seconds); const best=valid[0]; document.getElementById('min-time').textContent=formatSec(best.seconds); document.getElementById('min-rpm').textContent=String(best.rpm); document.getElementById('min-range').textContent=best.range.replace('-',' - '); const bestCell=document.getElementById(`d_${best.range.replace('-','_')}_${best.rpm}`); if(bestCell) bestCell.classList.add('globalMin'); }
-    else { document.getElementById('min-time').textContent='–'; document.getElementById('min-rpm').textContent='–'; document.getElementById('min-range').textContent='–'; }
-    // Propagate passive results into Active test UI after imported durations
-    try{ updateActiveSeed(); }catch(e){}
-  }
-
-  // Import handler
-  document.getElementById('btn-import').addEventListener('click', ()=>document.getElementById('file-results').click());
-  document.getElementById('file-results').addEventListener('change', (evt)=>{
-    const msg = document.getElementById('resultsMsg'); msg.textContent=''; const file = evt.target.files && evt.target.files[0]; if(!file){ msg.textContent='No file selected.'; return; }
-    const reader=new FileReader(); reader.onerror=()=>{ msg.textContent='Failed to read file.'; evt.target.value=''; };
-    reader.onload=()=>{
-      try{
-        const parsed = parseResultsCsv(reader.result);
-        if(parsed.errors.length){ msg.textContent='Parse error: '+parsed.errors[0]; evt.target.value=''; return; }
-        // If timestamps present, attempt full restore
-        if(!parsed.legacy && Object.keys(parsed.timestamps).length){
-          const incomingRpms = Object.keys(parsed.timestamps).map(r=>Number(r)).sort((a,b)=>a-b);
-          const current = allRpms(); const anyTimestamps = Array.from(document.querySelectorAll('#tbl-input input[type=datetime-local]')).some(inp=>inp.value);
-          const differs = incomingRpms.length!==current.length || incomingRpms.some((r,i)=>r!==current[i]);
-          if(differs && anyTimestamps){ if(!confirm('Replace current RPMs? All timestamps will be cleared.')){ msg.textContent='Load cancelled.'; evt.target.value=''; return; } }
-          // Replace RPM map if needed
-          if(differs){ rpmWobs = new Map(); for(const r of incomingRpms) rpmWobs.set(r, allowedWobsForRpm(r)); renderHeaders(); renderInputTable(); renderCalcTable(); }
-          // Restore timestamps
-          // Build snapshot-like object
-          const snap = {};
-          for(const rStr of Object.keys(parsed.timestamps)){ const r = Number(rStr); snap[r]={}; for(const wobStr of Object.keys(parsed.timestamps[rStr])){ snap[r][wobStr]=parsed.timestamps[rStr][wobStr]; } }
-          restoreInputState(snap);
-          recalc(); msg.textContent=`Loaded ${Object.keys(parsed.timestamps).length} RPM(s) with timestamps.`;
-        } else {
-          // Legacy or no timestamps: detect and add missing RPM columns
-          const snapshot = captureInputState();
-          const incomingRpms = new Set();
-          const invalidRpms = [];
           
-          // Scan all durations for unique RPMs
-          for(const d of parsed.durations){
-            if(d && d.rpm && Number.isFinite(d.rpm)){
-              incomingRpms.add(d.rpm);
+        </div>
+        <div
+          id="active-wob-rops"
+          style="margin-bottom: 14px; display: none"
+        ></div>
+        <!-- RPM Trials section removed -->
+      </section>
+
+      <section class="panel" id="active-summary-panel" style="display: none;">
+        <h2>Active Test Results</h2>
+        <div class="summary" id="active-summary">
+          <div class="card">
+            <div class="num" id="active-opt-wob">–</div>
+            <div class="lbl">Optimum WOB (klbf)</div>
+          </div>
+          <div class="card">
+            <div class="num" id="active-opt-rpm">–</div>
+            <div class="lbl">Derived Optimum RPM</div>
+          </div>
+          <div class="card">
+            <div class="num" id="active-rop-unit">–</div>
+            <div class="lbl">ROP Unit</div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <section class="footer">
+      <p>
+        Contact Son Pham (son.pham2@bakerhughes.com) if needing any
+        clarification or assistance.
+      </p>
+    </section>
+
+    <script>
+      (function () {
+        // ===== THEME SYSTEM =====
+        const themes = {
+          dark: {
+            bg: "#0b1324",
+            panel: "#111a33",
+            text: "#e7eefc",
+            muted: "#9db0d5",
+            accent: "#3aa0ff",
+            good: "#1db954",
+            bad: "#ff5c5c",
+            grid: "#223256",
+            btn: "#102446",
+            btn2: "#163462",
+          },
+          light: {
+            bg: "#f6f8fb",
+            panel: "#ffffff",
+            text: "#0e1a2f",
+            muted: "#4a5b79",
+            accent: "#0b75ff",
+            good: "#1b8e3e",
+            bad: "#d13c3c",
+            grid: "#d7e0f2",
+            btn: "#e8eefb",
+            btn2: "#dbe6fb",
+          },
+          ocean: {
+            bg: "#071a1f",
+            panel: "#0c2a31",
+            text: "#e7fffb",
+            muted: "#9bd5cf",
+            accent: "#00d1c1",
+            good: "#13c27f",
+            bad: "#ff6b6b",
+            grid: "#184149",
+            btn: "#0f3841",
+            btn2: "#12505b",
+          },
+          bh: {
+            bg: "#0b1a16",
+            panel: "#0f2a22",
+            text: "#e7f7f3",
+            muted: "#a5cfc3",
+            accent: "#00a36c",
+            good: "#00c389",
+            bad: "#ff6b6b",
+            grid: "#1b4336",
+            btn: "#103a2f",
+            btn2: "#145443",
+          },
+          contrast: {
+            bg: "#000000",
+            panel: "#0a0a0a",
+            text: "#ffffff",
+            muted: "#d0d0d0",
+            accent: "#ffcc00",
+            good: "#00ff84",
+            bad: "#ff3b3b",
+            grid: "#333333",
+            btn: "#121212",
+            btn2: "#1c1c1c",
+          },
+        };
+
+        function applyVars(v) {
+          const r = document.documentElement.style;
+          for (const [k, val] of Object.entries(v))
+            r.setProperty(`--${k}`, val);
+          // Ensure picker tokens exist and derive from theme if not explicitly provided
+          if (!v["picker-bg"]) {
+            const pickerBg = `color-mix(in oklab, ${
+              v.panel || "var(--panel)"
+            }, white 8%)`;
+            r.setProperty("--picker-bg", pickerBg);
+            r.setProperty(
+              "--picker-border",
+              `color-mix(in oklab, ${v.grid || "var(--grid)"}, white 18%)`
+            );
+            r.setProperty(
+              "--picker-hover-bg",
+              `color-mix(in oklab, ${v.panel || "var(--panel)"}, white 12%)`
+            );
+            r.setProperty(
+              "--picker-focus-border",
+              `color-mix(in oklab, ${v.accent || "var(--accent)"}, white 10%)`
+            );
+            r.setProperty(
+              "--picker-focus-ring",
+              `0 0 0 4px color-mix(in oklab, ${
+                v.accent || "var(--accent)"
+              }, transparent 85%)`
+            );
+            r.setProperty(
+              "--picker-disabled-bg",
+              `color-mix(in oklab, ${v.panel || "var(--panel)"}, black 6%)`
+            );
+            r.setProperty(
+              "--picker-disabled-text",
+              `color-mix(in oklab, ${v.text || "var(--text)"}, black 40%)`
+            );
+          }
+          // Update swatches
+          document.getElementById("sw-bg").style.background = v.bg;
+          document.getElementById("sw-panel").style.background = v.panel;
+          document.getElementById("sw-accent").style.background = v.accent;
+          document.getElementById("sw-text").style.background = v.text;
+        }
+
+        function getCurrentVars() {
+          const s = getComputedStyle(document.documentElement);
+          return {
+            bg: s.getPropertyValue("--bg").trim(),
+            panel: s.getPropertyValue("--panel").trim(),
+            text: s.getPropertyValue("--text").trim(),
+            muted: s.getPropertyValue("--muted").trim(),
+            accent: s.getPropertyValue("--accent").trim(),
+            good: s.getPropertyValue("--good").trim(),
+            bad: s.getPropertyValue("--bad").trim(),
+            grid: s.getPropertyValue("--grid").trim(),
+            btn: s.getPropertyValue("--btn").trim(),
+            btn2: s.getPropertyValue("--btn2").trim(),
+          };
+        }
+
+        function loadSavedTheme() {
+          const payload = localStorage.getItem("drilloff_theme");
+          if (!payload) {
+            applyVars(themes.ocean);
+            return "ocean";
+          } // OCEAN as first-load default
+          const obj = JSON.parse(payload);
+          applyVars(obj.vars);
+          return obj.name || "custom";
+        }
+
+        function saveTheme(name, vars) {
+          localStorage.setItem(
+            "drilloff_theme",
+            JSON.stringify({ name, vars })
+          );
+        }
+
+        const themeSelect = document.getElementById("themeSelect");
+        const customControls = document.getElementById("customControls");
+        const pickPrimary = document.getElementById("cPrimary");
+        const pickAccent = document.getElementById("cAccent");
+        const pickText = document.getElementById("cText");
+        const pickPanel = document.getElementById("cPanel");
+
+        function setTheme(name) {
+          if (name !== "custom") {
+            applyVars(themes[name]);
+            saveTheme(name, themes[name]);
+            customControls.style.display = "none";
+          } else {
+            customControls.style.display = "inline-flex";
+            const v = getCurrentVars();
+            pickPrimary.value = toHex(v.bg);
+            pickPanel.value = toHex(v.panel);
+            pickText.value = toHex(v.text);
+            pickAccent.value = toHex(v.accent);
+          }
+        }
+
+        function toHex(color) {
+          const ctx = document.createElement("canvas").getContext("2d");
+          ctx.fillStyle = color;
+          const hex = ctx.fillStyle; // normalized hex
+          return /^#/.test(hex) ? hex : "#000000";
+        }
+
+        themeSelect.addEventListener("change", (e) => setTheme(e.target.value));
+        document
+          .getElementById("btn-theme-reset")
+          .addEventListener("click", () => {
+            themeSelect.value = "ocean";
+            setTheme("ocean");
+          });
+        [pickPrimary, pickPanel, pickText, pickAccent].forEach(
+          (inp) =>
+            inp &&
+            inp.addEventListener("input", () => {
+              const v = getCurrentVars();
+              v.bg = pickPrimary.value;
+              v.panel = pickPanel.value;
+              v.text = pickText.value;
+              v.accent = pickAccent.value;
+              applyVars(v);
+              saveTheme("custom", v);
+              themeSelect.value = "custom";
+            })
+        );
+
+        // Init theme from storage (OCEAN if none saved)
+        const active = loadSavedTheme();
+        themeSelect.value = active;
+        if (active === "custom") customControls.style.display = "inline-flex";
+
+        // ===== CORE APP (v9 logic retained) =====
+        function allowedWobsForRpm(rpm) {
+          const limit = Math.floor((9000 - 1) / rpm);
+          const max5 = Math.floor(limit / 5) * 5;
+          if (max5 < 5) return [];
+          const list = [];
+          for (let w = max5; w > 0; w -= 10) list.push(w);
+          return list;
+        }
+        const defaultRpms = [180, 190, 200, 210];
+        let rpmWobs = new Map();
+        for (const r of defaultRpms) rpmWobs.set(r, allowedWobsForRpm(r));
+
+        const theadInput = document.getElementById("thead-input");
+        const tbodyInput = document.getElementById("tbody-input");
+        const theadCalc = document.getElementById("thead-calc");
+        const tbodyCalc = document.getElementById("tbody-calc");
+        const emptyInput = document.getElementById("empty-state-input");
+        const emptyCalc = document.getElementById("empty-state-calc");
+
+        // ===== STATE PRESERVATION HELPERS (added v10 refactor) =====
+        function captureInputState() {
+          const snap = {};
+          for (const rpm of allRpms()) {
+            const wobs = rpmWobs.get(rpm) || [];
+            snap[rpm] = {};
+            for (const wob of wobs) {
+              const el = document.getElementById(inputId(rpm, wob));
+              if (el) snap[rpm][wob] = el.value;
+            }
+          }
+          return snap;
+        }
+        function filterSnapshot(snapshot, currentMap) {
+          const out = {};
+          for (const [rpm, wobs] of currentMap.entries()) {
+            if (!snapshot[rpm]) continue;
+            const obj = {};
+            for (const wob of wobs) {
+              if (Object.prototype.hasOwnProperty.call(snapshot[rpm], wob))
+                obj[wob] = snapshot[rpm][wob];
+            }
+            out[rpm] = obj;
+          }
+          return out;
+        }
+        function restoreInputState(snapshot) {
+          for (const rpmKey of Object.keys(snapshot)) {
+            const wobObj = snapshot[rpmKey];
+            for (const wobKey of Object.keys(wobObj)) {
+              const el = document.getElementById(
+                inputId(Number(rpmKey), Number(wobKey))
+              );
+              if (el) el.value = wobObj[wobKey];
+            }
+          }
+        }
+
+        const uniqSortedDesc = (arr) =>
+          Array.from(new Set(arr)).sort((a, b) => b - a);
+        const allRpms = () => Array.from(rpmWobs.keys()).sort((a, b) => a - b);
+        const wobUniverse = () =>
+          uniqSortedDesc([].concat(...Array.from(rpmWobs.values())));
+        
+        function updateActiveTestVisibility(hasValidData) {
+          const activeTestDiv = document.getElementById("active-test");
+          if (activeTestDiv) {
+            activeTestDiv.style.display = hasValidData ? "block" : "none";
+          }
+        }
+        
+        const rangeUniverse = () => {
+          const set = new Set();
+          for (const [, w] of rpmWobs)
+            for (let i = 0; i < w.length - 1; i++)
+              set.add(`${w[i]}-${w[i + 1]}`);
+          return Array.from(set).sort((a, b) => {
+            const [ah, al] = a.split("-").map(Number);
+            const [bh, bl] = b.split("-").map(Number);
+            if (ah !== bh) return bh - ah;
+            return bl - al;
+          });
+        };
+        const cellId = (hi, lo, rpm) => `d_${hi}_${lo}_${rpm}`;
+        const inputId = (rpm, wob) => `t_${rpm}_${wob}`;
+        const pad2 = (n) => String(n).padStart(2, "0");
+        const todayISODate = () => {
+          const d = new Date();
+          return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(
+            d.getDate()
+          )}`;
+        };
+        const parseDT = (v) => {
+          if (!v) return NaN;
+          const t = new Date(v),
+            x = t.getTime();
+          return Number.isNaN(x) ? NaN : Math.floor(x / 1000);
+        };
+        const formatSec = (x) =>
+          Number.isFinite(x) ? Math.round(x * 1000) / 1000 : "";
+
+        function updateEmptyStates() {
+          const has = allRpms().length > 0;
+          emptyInput.style.display = has ? "none" : "block";
+          emptyCalc.style.display = has ? "none" : "block";
+        }
+
+        function renderHeaders() {
+          theadInput
+            .querySelectorAll("th:not(:first-child)")
+            .forEach((n) => n.remove());
+          theadCalc
+            .querySelectorAll("th:not(:first-child)")
+            .forEach((n) => n.remove());
+          for (const rpm of allRpms()) {
+            const mk = () => {
+              const th = document.createElement("th");
+              const wrap = document.createElement("div");
+              wrap.className = "rpmHdr";
+              const lbl = document.createElement("span");
+              lbl.textContent = `${rpm} RPM`;
+              const del = document.createElement("button");
+              del.className = "delBtn";
+              del.title = `Remove RPM ${rpm}`;
+              del.textContent = "×";
+              del.addEventListener("click", () => removeRpm(rpm));
+              wrap.appendChild(lbl);
+              wrap.appendChild(del);
+              th.appendChild(wrap);
+              return th;
+            };
+            theadInput.appendChild(mk());
+            theadCalc.appendChild(mk());
+          }
+          updateEmptyStates();
+        }
+
+        function ensureInputRow(wob) {
+          let tr = tbodyInput.querySelector(`tr[data-wob="${wob}"]`);
+          if (tr) return tr;
+          tr = document.createElement("tr");
+          tr.dataset.wob = String(wob);
+          const th = document.createElement("th");
+          th.className = "rowhdr";
+          th.textContent = wob;
+          tr.appendChild(th);
+          for (const rpm of allRpms()) tr.appendChild(buildInputCell(rpm, wob));
+          const rows = Array.from(tbodyInput.querySelectorAll("tr"));
+          const idx = rows.findIndex((r) => Number(r.dataset.wob) < wob);
+          if (idx === -1) tbodyInput.appendChild(tr);
+          else tbodyInput.insertBefore(tr, rows[idx]);
+          return tr;
+        }
+        function buildInputCell(rpm, wob) {
+          const td = document.createElement("td");
+          const allowed = (rpmWobs.get(rpm) || []).includes(wob);
+          if (allowed) {
+            const wrap = document.createElement("div");
+            wrap.className = "pickerWrap";
+            const inp = document.createElement("input");
+            inp.type = "datetime-local";
+            inp.step = 1;
+            inp.placeholder = "YYYY-MM-DDThh:mm:ss";
+            inp.id = inputId(rpm, wob);
+            inp.addEventListener("change", recalc); // Accessibility: hint and label on the input (picker button removed)
+            inp.title = "Open date/time picker";
+            inp.setAttribute("aria-label", "Date and time");
+            wrap.appendChild(inp);
+            td.appendChild(wrap);
+          } else {
+            td.textContent = "—";
+            td.style.opacity = 0.5;
+          }
+          return td;
+        }
+        function renderInputTable() {
+          tbodyInput.innerHTML = "";
+          for (const wob of wobUniverse()) ensureInputRow(wob);
+          tbodyInput.querySelectorAll("tr").forEach((tr) => {
+            const wob = Number(tr.dataset.wob);
+            tr.querySelectorAll("td").forEach((td) => td.remove());
+            for (const rpm of allRpms())
+              tr.appendChild(buildInputCell(rpm, wob));
+          });
+          updateEmptyStates();
+        }
+        function renderCalcTable() {
+          tbodyCalc.innerHTML = "";
+          for (const label of rangeUniverse()) {
+            const [hi, lo] = label.split("-").map(Number);
+            const tr = document.createElement("tr");
+            const th = document.createElement("th");
+            th.className = "rowhdr";
+            th.textContent = `${hi} - ${lo}`;
+            tr.appendChild(th);
+            for (const rpm of allRpms()) {
+              const td = document.createElement("td");
+              td.id = cellId(hi, lo, rpm);
+              tr.appendChild(td);
+            }
+            tbodyCalc.appendChild(tr);
+          }
+          updateEmptyStates();
+        }
+
+        function recalc() {
+          document
+            .querySelectorAll(".colMin, .globalMin")
+            .forEach((el) => el.classList.remove("colMin", "globalMin"));
+          const durations = [];
+          for (const rpm of allRpms()) {
+            const wobs = rpmWobs.get(rpm) || [];
+            let rpmMin = { val: Infinity, cell: null };
+            for (let i = 0; i < wobs.length - 1; i++) {
+              const hi = wobs[i],
+                lo = wobs[i + 1];
+              const tHi = parseDT(
+                (document.getElementById(inputId(rpm, hi)) || {}).value
+              );
+              const tLo = parseDT(
+                (document.getElementById(inputId(rpm, lo)) || {}).value
+              );
+              const td = document.getElementById(cellId(hi, lo, rpm));
+              let val = "";
+              if (Number.isFinite(tHi) && Number.isFinite(tLo)) {
+                const diff = tLo - tHi;
+                if (diff >= 0) {
+                  val = diff;
+                  if (diff < rpmMin.val) {
+                    rpmMin = { val: diff, cell: td };
+                  }
+                  durations.push({ rpm, range: `${hi}-${lo}`, seconds: diff });
+                } else {
+                  val = "Invalid (negative)";
+                }
+              }
+              if (td)
+                td.textContent = typeof val === "number" ? formatSec(val) : val;
+            }
+            if (rpmMin.cell) rpmMin.cell.classList.add("colMin");
+          }
+          const minTime = document.getElementById("min-time");
+          const minRpm = document.getElementById("min-rpm");
+          const minRange = document.getElementById("min-range");
+          const valid = durations.filter((d) => Number.isFinite(d.seconds));
+          if (valid.length) {
+            valid.sort((a, b) => a.seconds - b.seconds);
+            const best = valid[0];
+            minTime.textContent = formatSec(best.seconds);
+            minRpm.textContent = String(best.rpm);
+            minRange.textContent = best.range.replace("-", " - ");
+            const bestCell = document.getElementById(
+              `d_${best.range.replace("-", "_")}_${best.rpm}`
+            );
+            if (bestCell) bestCell.classList.add("globalMin");
+          } else {
+            minTime.textContent = "–";
+            minRpm.textContent = "–";
+            minRange.textContent = "–";
+          }
+          updateEmptyStates(); // propagate passive results into Active seed
+          try {
+            updateActiveSeed();
+          } catch (e) {}
+          updateActiveTestVisibility(valid.length > 0);
+          return durations;
+        }
+        // ===== ACTIVE TEST STATE & HELPERS =====
+        const activeState = {
+          initialized: false,
+          optRpm: null,
+          wobLow: null,
+          wobHigh: null,
+          selectedWob: null,
+          ropLow: null,
+          ropHigh: null,
+          countdownMinutes: 5,
+          countdownEnd: null,
+          countdownTimer: null,
+          ropUnit: "m/hr",
+          rpmTrials: [], // {rpm, rop:null, countdownEnd:null, timer:null, elRow}
+          finalRpm: null,
+          derivedOptRpm: null, // computed from two highest ROP trials (tie => lowest RPMs)
+          // per-WOB ROP map: { '<wob>': <rop> }
+          wobRops: {},
+        };
+
+        function updateActiveSeed() {
+          const rpmTxt = document.getElementById("min-rpm")?.textContent || "–";
+          const rangeTxt =
+            document.getElementById("min-range")?.textContent || ""; // format "HI - LO"
+          if (!rpmTxt || rpmTxt === "–" || !rangeTxt.includes("-")) return; // need passive optimum
+          const [hiStr, loStr] = rangeTxt.split("-").map((s) => s.trim());
+          const hi = Number(hiStr);
+          const lo = Number(loStr);
+          if (!Number.isFinite(hi) || !Number.isFinite(lo)) return;
+          activeState.optRpm = Number(rpmTxt);
+          activeState.wobLow = lo;
+          activeState.wobHigh = hi;
+          // Don't set selectedWob here - let it be computed from Active WOB table
+          if (!activeState.initialized) {
+            initActiveTrials();
+            activeState.initialized = true;
+          }
+          refreshFinalizeState();
+          // Build or refresh Active WOB table and Opt RPM trials whenever the seed updates
+          try {
+            renderActiveWobTable();
+          } catch (e) {}
+          try {
+            renderOptimumRpmTrialsTable();
+          } catch (e) {}
+        }
+
+        // Render Active WOB table based on activeState.wobLow, wobHigh, optRpm and #wobStep
+        function renderActiveWobTable() {
+          const container = document.getElementById("active-wob-table");
+          if (!container) return;
+          // Preserve existing values
+          const existing = {};
+          container.querySelectorAll &&
+            container.querySelectorAll("[data-wob]").forEach((el) => {
+              const w = el.getAttribute("data-wob");
+              if (w) {
+                const v = el.value;
+                if (v !== "") existing[w] = v;
+              }
+            });
+
+          const opt = Number(activeState.optRpm);
+          const low = Number(activeState.wobLow);
+          const high = Number(activeState.wobHigh);
+          let step = Number(document.getElementById("wobStep").value);
+          if (!Number.isFinite(step) || step <= 0) step = 3;
+          // Clear if missing data
+          if (
+            !Number.isFinite(opt) ||
+            !Number.isFinite(low) ||
+            !Number.isFinite(high)
+          ) {
+            container.innerHTML = "";
+            return;
+          }
+
+          // Ensure low <= high
+          let start = low,
+            end = high;
+          if (start > end) {
+            start = high;
+            end = low;
+          }
+
+          const columns = [];
+          // Build stepped columns starting at `start` and continue until value >= end.
+          const roundVal = (v) => Math.round(v * 1000) / 1000;
+          let v = roundVal(start);
+          let safety = 0;
+          // Only include WOB values where wob * optRpm < 9000. Stop when a stepped wob would violate the constraint.
+          while (safety < 500) {
+            // If this wob violates wob * rpm < 9000, break (larger wobs will also violate)
+            if (!(v * opt < 9000)) break;
+            columns.push(v);
+            if (v >= end) break;
+            v = roundVal(v + step);
+            safety++;
+          }
+          if (columns.length === 0) {
+            container.innerHTML =
+              '<div class="note">No acceptable WOB values (WOB × RPM must be &lt; 9000).</div>';
+            return;
+          }
+
+          // Build table
+          const tbl = document.createElement("table");
+          tbl.className = "grid";
+          tbl.id = "tbl-active-wob";
+          const thead = document.createElement("thead");
+          const trh = document.createElement("tr");
+          const th0 = document.createElement("th");
+          th0.textContent = "RPM from Passive Drill-Off Test";
+          trh.appendChild(th0);
+          for (const wob of columns) {
+            const th = document.createElement("th");
+            th.textContent = `${wob} klbf`;
+            trh.appendChild(th);
+          }
+          thead.appendChild(trh);
+          tbl.appendChild(thead);
+
+          const tbody = document.createElement("tbody");
+          const tr = document.createElement("tr");
+          const tdRpm = document.createElement("th");
+          tdRpm.className = "rowhdr";
+          tdRpm.textContent = String(opt);
+          tr.appendChild(tdRpm);
+          for (const wob of columns) {
+            const td = document.createElement("td");
+            const inp = document.createElement("input");
+            inp.type = "number";
+            inp.step = "0.1";
+            inp.placeholder = "ROP";
+            inp.setAttribute("data-wob", String(wob));
+            inp.id = `awob_${wob}`;
+            // restore from activeState.wobRops or preserved existing values
+            if (Object.prototype.hasOwnProperty.call(activeState.wobRops, wob))
+              inp.value = activeState.wobRops[wob];
+            else if (existing[String(wob)]) inp.value = existing[String(wob)];
+            inp.addEventListener("change", () => {
+              const val = inp.value;
+              if (val === "" || !Number.isFinite(Number(val))) {
+                delete activeState.wobRops[wob];
+              } else {
+                activeState.wobRops[wob] = Number(val);
+              }
+              refreshFinalizeState();
+              computeOptimumWobFromTable();
+            });
+            td.appendChild(inp);
+            tr.appendChild(td);
+          }
+          tbody.appendChild(tr);
+          tbl.appendChild(tbody);
+
+          // Replace container contents
+          container.innerHTML = "";
+          container.appendChild(tbl);
+
+          // Update optimum WOB after rendering table
+          try {
+            computeOptimumWobFromTable();
+          } catch (e) {}
+        }
+
+        // Render a small table for Optimum RPM trials: uses RPM Step input
+        function renderOptimumRpmTrialsTable() {
+          const container = document.getElementById("opt-rpm-trials-container");
+          if (!container) return;
+          
+          // Preserve existing ROP values before clearing
+          const existing = {};
+          if (activeState.optTrials) {
+            for (const rpm of Object.keys(activeState.optTrials)) {
+              existing[rpm] = activeState.optTrials[rpm];
             }
           }
           
-          // Check which RPMs are missing and validate them
-          const missingRpms = [];
-          for(const rpm of Array.from(incomingRpms)){
-            if(!rpmWobs.has(rpm)){
-              const wobs = allowedWobsForRpm(rpm);
-              if(wobs.length === 0){
-                invalidRpms.push(rpm);
+          container.innerHTML = "";
+          const opt = Number(activeState.optRpm);
+          if (!Number.isFinite(opt)) return;
+          
+          // Read RPM Step from input, validate min=1
+          let step = Number(document.getElementById("rpmStep").value);
+          if (!Number.isFinite(step) || step < 1) step = 5;
+          
+          // Generate RPMs: opt-step, opt, opt+step, filtering out negative values
+          const rpms = [opt - step, opt, opt + step]
+            .filter((r) => r > 0)
+            .map((r) => Math.round(r));
+
+          const tbl = document.createElement("table");
+          tbl.className = "grid";
+          const thead = document.createElement("thead");
+          const trh = document.createElement("tr");
+          const thLabel = document.createElement("th");
+          thLabel.textContent = "Optimum WOB (klbf)";
+          trh.appendChild(thLabel);
+          for (const r of rpms) {
+            const th = document.createElement("th");
+            th.textContent = `${r} RPM`;
+            trh.appendChild(th);
+          }
+          thead.appendChild(trh);
+          tbl.appendChild(thead);
+
+          const tbody = document.createElement("tbody");
+          const tr = document.createElement("tr");
+          const th0 = document.createElement("th");
+          th0.className = "rowhdr";
+          th0.id = "opt-wob-cell"; // allow dynamic sync with computed optimum WOB
+          // Show "-" until at least 2 ROP values are entered in Active WOB table
+          const wobEntries = Object.keys(activeState.wobRops)
+            .map((k) => activeState.wobRops[k])
+            .filter((v) => Number.isFinite(v));
+          th0.textContent = wobEntries.length >= 2 && Number.isFinite(activeState.selectedWob)
+            ? String(activeState.selectedWob)
+            : "–";
+          tr.appendChild(th0);
+          for (const r of rpms) {
+            const td = document.createElement("td");
+            const inp = document.createElement("input");
+            inp.type = "number";
+            inp.step = "0.1";
+            inp.placeholder = "ROP";
+            inp.id = `opt_r_${r}`;
+            // Restore from existing if available
+            if (existing[r] !== undefined) {
+              inp.value = existing[r];
+            }
+            inp.addEventListener("change", () => {
+              const v = inp.value;
+              if (v === "" || !Number.isFinite(Number(v))) {
+                if (activeState.optTrials) delete activeState.optTrials[r];
               } else {
-                missingRpms.push(rpm);
+                activeState.optTrials = activeState.optTrials || {};
+                activeState.optTrials[r] = Number(v);
+              }
+              refreshFinalizeState();
+              deriveOptimumRpmFromTrials();
+            });
+            td.appendChild(inp);
+            tr.appendChild(td);
+          }
+          tbody.appendChild(tr);
+          tbl.appendChild(tbody);
+          container.appendChild(tbl);
+          // Ensure display exists (in case dynamically added) and compute initial value
+          if (!document.getElementById("derived-opt-rpm-display")) {
+            const d = document.createElement("div");
+            d.id = "derived-opt-rpm-display";
+            d.className = "note";
+            d.textContent = "Optimum RPM: –";
+            container.parentElement && container.parentElement.insertBefore(d, container.nextSibling);
+          }
+          deriveOptimumRpmFromTrials();
+        }
+
+        // Compute optimum WOB by selecting the two ROPs that give the highest WOBs
+        function computeOptimumWobFromTable() {
+          // activeState.wobRops: { wob: rop }
+          const entries = Object.keys(activeState.wobRops)
+            .map((k) => ({
+              wob: Number(k),
+              rop: Number(activeState.wobRops[k]),
+            }))
+            .filter((e) => Number.isFinite(e.wob) && Number.isFinite(e.rop));
+          if (entries.length < 2) {
+            const _aSeedOptwobEl = document.getElementById("a-seed-optwob");
+            if (_aSeedOptwobEl) _aSeedOptwobEl.textContent = "–";
+            const wobHdr = document.getElementById("opt-wob-cell");
+            if (wobHdr) wobHdr.textContent = "–"; // keep trials table in sync
+            // Clear selectedWob when fewer than 2 entries
+            activeState.selectedWob = null;
+            return null;
+          }
+          // We need to select the two ROPs which give the highest WOB — interpreted as pick the two entries with highest ROP values,
+          // then compute optimum WOB as average of their WOBs.
+          entries.sort((a, b) => b.rop - a.rop);
+          const top = entries.slice(0, 2);
+          const opt = (top[0].wob + top[1].wob) / 2;
+          const rounded = Math.round(opt * 100) / 100;
+          activeState.selectedWob = rounded;
+          const _aSeedOptwobEl2 = document.getElementById("a-seed-optwob");
+          if (_aSeedOptwobEl2) _aSeedOptwobEl2.textContent = String(rounded);
+          const wobHdr = document.getElementById("opt-wob-cell");
+          if (wobHdr) wobHdr.textContent = String(rounded); // update trials table header cell
+          updateActiveSummary(); // Update summary display
+          return rounded;
+        }
+
+        // Update Active Test Summary display
+        function updateActiveSummary() {
+          const panel = document.getElementById("active-summary-panel");
+          const optWobEl = document.getElementById("active-opt-wob");
+          const optRpmEl = document.getElementById("active-opt-rpm");
+          const ropUnitEl = document.getElementById("active-rop-unit");
+          
+          if (!panel || !optWobEl || !optRpmEl || !ropUnitEl) return;
+          
+          const hasWob = Number.isFinite(activeState.selectedWob);
+          const hasRpm = Number.isFinite(activeState.derivedOptRpm);
+          
+          // Show panel only when we have valid data
+          if (hasWob || hasRpm) {
+            panel.style.display = "block";
+            optWobEl.textContent = hasWob ? String(activeState.selectedWob) : "–";
+            optRpmEl.textContent = hasRpm ? String(activeState.derivedOptRpm) : "–";
+            ropUnitEl.textContent = activeState.ropUnit || "m/hr";
+          } else {
+            panel.style.display = "none";
+          }
+        }
+
+        function initActiveTrials() {
+          // Seed trials with optRpm-5, optRpm, optRpm+5 (only positive RPMs)
+          const base = activeState.optRpm;
+          if (!Number.isFinite(base)) return;
+          const seeds = [base - 5, base, base + 5].filter((r) => r > 0);
+          for (const r of seeds) {
+            addTrialRow(r);
+          }
+        }
+
+        function addTrialRow(rpm) {
+          if (activeState.rpmTrials.some((t) => t.rpm === rpm)) return; // avoid duplicates
+          const tbody = document.getElementById("tbody-active-trials");
+          if (!tbody) return; // RPM Trials UI removed — no-op
+          const tr = document.createElement("tr");
+          tr.dataset.rpm = String(rpm);
+          const tdRpm = document.createElement("td");
+          tdRpm.textContent = String(rpm);
+          tr.appendChild(tdRpm);
+          const tdRop = document.createElement("td");
+          const inp = document.createElement("input");
+          inp.type = "number";
+          inp.min = "0";
+          inp.step = "0.1";
+          inp.disabled = true;
+          inp.addEventListener("change", () => {
+            const trial = activeState.rpmTrials.find((t) => t.rpm === rpm);
+            if (trial) trial.rop = Number(inp.value) || null;
+            refreshFinalizeState();
+          });
+          tdRop.appendChild(inp);
+          tr.appendChild(tdRop);
+          const tdCountdown = document.createElement("td");
+          const btnStart = document.createElement("button");
+          btnStart.textContent = "Start";
+          btnStart.addEventListener("click", () =>
+            startTrialCountdown(rpm, btnStart, inp)
+          );
+          tdCountdown.appendChild(btnStart);
+          tr.appendChild(tdCountdown);
+          const tdRemove = document.createElement("td");
+          const btnDel = document.createElement("button");
+          btnDel.textContent = "×";
+          btnDel.className = "delBtn";
+          btnDel.addEventListener("click", () => {
+            activeState.rpmTrials = activeState.rpmTrials.filter(
+              (t) => t.rpm !== rpm
+            );
+            tr.remove();
+            refreshFinalizeState();
+          });
+          tdRemove.appendChild(btnDel);
+          tr.appendChild(tdRemove);
+          tbody.appendChild(tr);
+          activeState.rpmTrials.push({
+            rpm,
+            rop: null,
+            elRow: tr,
+            countdownEnd: null,
+            timer: null,
+          });
+        }
+
+        function startTrialCountdown(rpm, btn, ropInput) {
+          if (activeState.countdownTimer) {
+            /* allow parallel? keep independent */
+          }
+          const minutes = activeState.countdownMinutes;
+          const end = Date.now() + minutes * 60000;
+          btn.disabled = true;
+          ropInput.disabled = true;
+          btn.textContent = "Running";
+          const trial = activeState.rpmTrials.find((t) => t.rpm === rpm);
+          if (trial) {
+            trial.countdownEnd = end;
+          }
+          const tick = () => {
+            const remain = end - Date.now();
+            if (remain <= 0) {
+              clearInterval(trial.timer);
+              btn.textContent = "Done";
+              ropInput.disabled = false;
+              btn.disabled = true;
+              refreshFinalizeState();
+              return;
+            }
+            btn.textContent = Math.ceil(remain / 1000) + "s";
+          };
+          trial.timer = setInterval(tick, 1000);
+          tick();
+        }
+
+        // Global WOB selection and countdown removed — Active seed will use passive results
+
+        function refreshFinalizeState() {
+          // Update unit labels
+          const ropLabelEl = document.getElementById("rop-unit-label");
+          if (ropLabelEl) ropLabelEl.textContent = activeState.ropUnit;
+          const activeSeedLabelEl = document.getElementById(
+            "active-unit-label-seed"
+          );
+          if (activeSeedLabelEl)
+            activeSeedLabelEl.textContent = activeState.ropUnit;
+          // Button enable conditions
+          const finalizeBtn = document.getElementById("btn-finalize-active");
+          const trialsWithRop = activeState.rpmTrials.filter((t) =>
+            Number.isFinite(t.rop)
+          );
+          // Require at least two trials with ROP; Selected WOB removed from UI so don't require it here
+          if (finalizeBtn) finalizeBtn.disabled = trialsWithRop.length < 2;
+        }
+
+        function finalizeActiveRpm() {
+          const data = activeState.rpmTrials.filter((t) =>
+            Number.isFinite(t.rop)
+          );
+          if (data.length < 2) {
+            const el = document.getElementById("active-final-summary");
+            if (el) el.textContent = "Need at least two ROP trials.";
+            return;
+          }
+          data.sort((a, b) => b.rop - a.rop);
+          const top = data.slice(0, 2);
+          const final = Math.round((top[0].rpm + top[1].rpm) / 2);
+          activeState.finalRpm = final;
+          const outEl = document.getElementById("active-final-summary");
+          if (outEl)
+            outEl.textContent = `Fastest trials RPMs: ${top[0].rpm} (${top[0].rop} ${activeState.ropUnit}), ${top[1].rpm} (${top[1].rop} ${activeState.ropUnit}). Final RPM: ${final}`;
+        }
+
+        // Derive optimum RPM from Opt RPM trials table (activeState.optTrials)
+        function deriveOptimumRpmFromTrials() {
+          const trials = activeState.optTrials || {};
+          const rows = Object.keys(trials)
+            .map((r) => ({ rpm: Number(r), rop: Number(trials[r]) }))
+            .filter(
+              (e) =>
+                Number.isFinite(e.rpm) &&
+                Number.isFinite(e.rop) &&
+                e.rop > 0 // require positive ROP
+            );
+          if (rows.length < 2) {
+            activeState.derivedOptRpm = null;
+            const el = document.getElementById("derived-opt-rpm-display");
+            if (el) el.textContent = "Optimum RPM: –";
+            return null;
+          }
+          // Sort by ROP desc, then RPM asc (so ties favor lower RPMs)
+          rows.sort((a, b) => {
+            if (b.rop !== a.rop) return b.rop - a.rop;
+            return a.rpm - b.rpm;
+          });
+          // Choose top two trials (preserve tie behaviour)
+          const topRop = rows[0].rop;
+          const tied = rows.filter((r) => r.rop === topRop);
+          let chosen;
+          if (tied.length >= 2) {
+            chosen = tied.slice(0, 2); // already rpm-asc
+          } else {
+            chosen = rows.slice(0, 2);
+          }
+          // Compute weighted average using ROP as weight (Option A: top 2 weighted)
+          const w1 = chosen[0].rop;
+          const w2 = chosen[1].rop;
+          const weighted = (chosen[0].rpm * w1 + chosen[1].rpm * w2) / (w1 + w2);
+          const avg = Math.round(weighted);
+          activeState.derivedOptRpm = avg;
+          const el = document.getElementById("derived-opt-rpm-display");
+          if (el) el.textContent = `Derived Optimum RPM: ${avg}`;
+          updateActiveSummary(); // Update summary display
+          return avg;
+        }
+
+        // ===== ACTIVE UI EVENT BINDINGS =====
+        const _ropUnitEl = document.getElementById("ropUnit");
+        if (_ropUnitEl) {
+          _ropUnitEl.addEventListener("change", (e) => {
+            activeState.ropUnit = e.target.value;
+            refreshFinalizeState();
+          });
+        }
+        // Countdown and select WOB controls removed; no listeners required
+        const btnAddTrial = document.getElementById("btn-add-trial");
+        if (btnAddTrial) {
+          btnAddTrial.addEventListener("click", () => {
+            const trialInput = document.getElementById("trial-rpm");
+            const hintEl = document.getElementById("rpmTrialsHint");
+            const v = Number(trialInput ? trialInput.value : NaN);
+            if (!Number.isFinite(v) || v <= 0) {
+              if (hintEl) hintEl.textContent = "Enter valid RPM to add.";
+              return;
+            }
+            addTrialRow(v);
+            if (trialInput) trialInput.value = "";
+            refreshFinalizeState();
+          });
+        }
+        const btnFinalizeActive = document.getElementById(
+          "btn-finalize-active"
+        );
+        if (btnFinalizeActive)
+          btnFinalizeActive.addEventListener("click", finalizeActiveRpm);
+
+        // WOB Step change should re-render the Active WOB table
+        document.getElementById("wobStep").addEventListener("change", () => {
+          try {
+            renderActiveWobTable();
+          } catch (e) {}
+        });
+
+        // RPM Step change should re-render the Optimum RPM trials table
+        document.getElementById("rpmStep").addEventListener("change", () => {
+          try {
+            renderOptimumRpmTrialsTable();
+          } catch (e) {}
+        });
+
+        // Hook passive recalc to seed active
+        const originalRecalc = recalc;
+        // Already defined recalc above; we call updateActiveSeed after initial render
+        updateActiveSeed();
+
+        function addCustomRpm() {
+          const rpmVal = Number(document.getElementById("newRpm").value);
+          const msg = document.getElementById("addMsg");
+          msg.textContent = "";
+          if (!Number.isFinite(rpmVal) || rpmVal <= 0) {
+            msg.textContent = "Enter a valid RPM (>0).";
+            return;
+          }
+          if (rpmWobs.has(rpmVal)) {
+            msg.textContent = `RPM ${rpmVal} already exists.`;
+            return;
+          }
+          const wobs = (function (r) {
+            const limit = Math.floor((9000 - 1) / r);
+            const max5 = Math.floor(limit / 5) * 5;
+            if (max5 < 5) return [];
+            const out = [];
+            for (let w = max5; w > 0; w -= 10) out.push(w);
+            return out;
+          })(rpmVal);
+          if (wobs.length === 0) {
+            msg.textContent = `Cannot add RPM ${rpmVal}: even 5 klbf violates WOB×RPM<9000.`;
+            return;
+          }
+          const snapshot = captureInputState();
+          rpmWobs.set(rpmVal, wobs);
+          renderHeaders();
+          renderInputTable();
+          renderCalcTable();
+          restoreInputState(filterSnapshot(snapshot, rpmWobs));
+          recalc();
+          msg.textContent = `Added RPM ${rpmVal}. Allowed WOB inputs (every 10 from max): ${wobs.join(
+            ", "
+          )}`;
+        }
+        function removeRpm(rpm) {
+          if (!rpmWobs.has(rpm)) return;
+          const snapshot = captureInputState();
+          rpmWobs.delete(rpm);
+          renderHeaders();
+          renderInputTable();
+          renderCalcTable();
+          restoreInputState(filterSnapshot(snapshot, rpmWobs));
+          recalc();
+        }
+        function resetDefaults() {
+          const snapshot = captureInputState();
+          rpmWobs = new Map();
+          for (const r of defaultRpms)
+            rpmWobs.set(
+              r,
+              (function (r) {
+                const limit = Math.floor((9000 - 1) / r);
+                const max5 = Math.floor(limit / 5) * 5;
+                if (max5 < 5) return [];
+                const out = [];
+                for (let w = max5; w > 0; w -= 10) out.push(w);
+                return out;
+              })(r)
+            );
+          renderHeaders();
+          renderInputTable();
+          renderCalcTable();
+          restoreInputState(filterSnapshot(snapshot, rpmWobs));
+          recalc();
+          document.getElementById("addMsg").textContent =
+            "Reset to default RPMs.";
+        }
+
+        // ===== SAVE / LOAD RPMs (timestamps cleared on load) =====
+        function saveRpms() {
+          const msg = document.getElementById("addMsg");
+          const rpms = allRpms();
+          if (!rpms.length) {
+            msg.textContent = "No RPMs to save.";
+            return;
+          }
+          const payload = {
+            rpms,
+            meta: { version: 10, savedAt: new Date().toISOString() },
+          };
+          try {
+            const blob = new Blob([JSON.stringify(payload, null, 2)], {
+              type: "application/json",
+            });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "drill_off_rpms.json";
+            a.click();
+            URL.revokeObjectURL(a.href);
+            msg.textContent = "Saved RPM list.";
+          } catch (err) {
+            msg.textContent = "Save error: " + err.message;
+          }
+        }
+
+        function loadRpmsFile(evt) {
+          const msg = document.getElementById("addMsg");
+          const file = evt.target.files && evt.target.files[0];
+          if (!file) {
+            msg.textContent = "No file selected.";
+            return;
+          }
+          const reader = new FileReader();
+          reader.onerror = () => {
+            msg.textContent = "Failed to read file.";
+            evt.target.value = "";
+          };
+          reader.onload = () => {
+            try {
+              const text = reader.result;
+              const obj = JSON.parse(text);
+              if (!obj || !Array.isArray(obj.rpms))
+                throw new Error("Missing rpms array.");
+              const incoming = obj.rpms.slice();
+              if (!incoming.length) throw new Error("Empty RPM list.");
+              const seen = new Set();
+              for (const r of incoming) {
+                if (!Number.isFinite(r) || r <= 0 || Math.round(r) !== r)
+                  throw new Error(`Invalid RPM: ${r}`);
+                if (seen.has(r)) throw new Error(`Duplicate RPM: ${r}`);
+                seen.add(r);
+                const w = allowedWobsForRpm(r);
+                if (w.length === 0)
+                  throw new Error(`RPM ${r} violates WOB×RPM<9000 rule.`);
+              }
+              const current = allRpms();
+              const anyTimestamps = Array.from(
+                document.querySelectorAll(
+                  "#tbl-input input[type=datetime-local]"
+                )
+              ).some((inp) => inp.value);
+              const differs =
+                incoming.length !== current.length ||
+                incoming.some((r, i) => r !== current[i]);
+              if (differs && anyTimestamps) {
+                if (
+                  !confirm(
+                    "Replace current RPMs? All timestamps will be cleared."
+                  )
+                ) {
+                  msg.textContent = "Load cancelled.";
+                  evt.target.value = "";
+                  return;
+                }
+              }
+              // Replace RPM map
+              rpmWobs = new Map();
+              for (const r of incoming) rpmWobs.set(r, allowedWobsForRpm(r));
+              renderHeaders();
+              renderInputTable();
+              renderCalcTable();
+              // All timestamps cleared implicitly by re-render; recalc will just refresh summary
+              recalc();
+            } catch (err) {
+              msg.textContent =
+                "Load error: " +
+                (err && err.message ? err.message : String(err));
+            } finally {
+              evt.target.value = "";
+            }
+          };
+          reader.readAsText(file);
+        }
+
+        document
+          .getElementById("btn-add-col")
+          .addEventListener("click", addCustomRpm);
+        document
+          .getElementById("btn-reset")
+          .addEventListener("click", resetDefaults);
+        // 'Recalculate' button removed as it's redundant; recalc() is called on input change
+        document.getElementById("btn-clear").addEventListener("click", () => {
+          // Clear passive timestamps
+          document
+            .querySelectorAll("#tbl-input input[type=datetime-local]")
+            .forEach((inp) => (inp.value = ""));
+
+          // Clear active test state and DOM so render won't preserve old inputs
+          try {
+            activeState.wobRops = {};
+            activeState.optTrials = {};
+            activeState.selectedWob = null;
+            activeState.derivedOptRpm = null;
+            activeState.finalRpm = null;
+            updateActiveSummary(); // Hide summary panel
+            // reset step controls
+            const wobStepEl = document.getElementById("wobStep");
+            const rpmStepEl = document.getElementById("rpmStep");
+            if (wobStepEl) wobStepEl.value = "5";
+            if (rpmStepEl) rpmStepEl.value = "5";
+
+            // Remove existing Active DOM so preserved values aren't re-used
+            const awobContainer = document.getElementById("active-wob-table");
+            if (awobContainer) awobContainer.innerHTML = "";
+            const optTrialsContainer = document.getElementById("opt-rpm-trials-container");
+            if (optTrialsContainer) optTrialsContainer.innerHTML = "";
+
+            // Also clear any lingering inputs by id pattern as extra safety
+            document
+              .querySelectorAll("#tbl-active-wob input, #tbl-active-wob textarea, input[id^=awob_], input[id^=opt_r_]")
+              .forEach((inp) => (inp.value = ""));
+
+            // re-render active UI
+            try {
+              renderActiveWobTable();
+              renderOptimumRpmTrialsTable();
+            } catch (e) {}
+          } catch (e) {}
+
+          recalc();
+          updateActiveTestVisibility(false);
+        });
+        document.getElementById("btn-sample").addEventListener("click", () => {
+          const day = todayISODate();
+          const sample = {
+            180: {
+              45: `${day}T08:15:15`,
+              35: `${day}T08:17:35`,
+              25: `${day}T08:20:20`,
+              15: `${day}T08:20:45`,
+              5: `${day}T08:21:10`,
+            },
+            190: {
+              45: `${day}T08:29:10`,
+              35: `${day}T08:30:00`,
+              25: `${day}T08:32:10`,
+              15: `${day}T08:33:50`,
+              5: `${day}T08:34:30`,
+            },
+            200: {
+              40: `${day}T08:35:10`,
+              30: `${day}T08:40:10`,
+              20: `${day}T08:50:11`,
+              10: `${day}T08:51:10`,
+            },
+            210: {
+              40: `${day}T09:11:30`,
+              30: `${day}T09:12:30`,
+              20: `${day}T09:13:40`,
+              10: `${day}T09:14:10`,
+            },
+          };
+          for (const rpm of Object.keys(sample)) {
+            for (const wob of Object.keys(sample[rpm])) {
+              const el = document.getElementById(inputId(rpm, wob));
+              if (el) el.value = sample[rpm][wob];
+            }
+          }
+          recalc();
+        });
+        // Single comprehensive export (passive + active). Versioned for compatibility.
+        document.getElementById("btn-export").addEventListener("click", () => {
+          const durations = recalc();
+          const metaLine = `META,version=4,generated=${new Date().toISOString()}`;
+          const lines = [metaLine, ""];
+          // PASSIVE RESULTS
+          lines.push("RPM,WOB Range (klbf),Seconds");
+          for (const d of durations)
+            lines.push(
+              `${d.rpm},${d.range},${Math.round(d.seconds * 1000) / 1000}`
+            );
+          const minT = document.getElementById("min-time").textContent;
+          const minR = document.getElementById("min-rpm").textContent;
+          const minW = document
+            .getElementById("min-range")
+            .textContent.replace(" ", "");
+          if (minT !== "–") {
+            lines.push("");
+            lines.push(`Minimum,${minR},${minW},${minT}`);
+          }
+
+          // TIMESTAMPS section
+          lines.push("");
+          lines.push("TIMESTAMPS");
+          lines.push("RPM,WOB,Timestamp");
+          for (const rpm of allRpms()) {
+            const wobs = rpmWobs.get(rpm) || [];
+            for (const wob of wobs) {
+              const el = document.getElementById(inputId(rpm, wob));
+              const val = el ? el.value : "";
+              lines.push(`${rpm},${wob},${val}`);
+            }
+          }
+
+          // ACTIVE TEST SECTIONS
+          lines.push("");
+          lines.push("ACTIVE-SETTINGS");
+          lines.push(`Unit,${activeState.ropUnit}`);
+          lines.push(`CountdownMinutes,${activeState.countdownMinutes}`);
+          const wobStepVal = document.getElementById("wobStep")?.value || "5";
+          const rpmStepVal = document.getElementById("rpmStep")?.value || "5";
+          lines.push(`WobStep,${wobStepVal}`);
+          lines.push(`RpmStep,${rpmStepVal}`);
+
+          lines.push("");
+          lines.push("ACTIVE-WOB-TABLE");
+          lines.push("WOB,ROP");
+          // Export actual Active WOB table data
+          const wobKeys = Object.keys(activeState.wobRops || {}).map(Number).sort((a,b)=>b-a);
+          for (const wobKey of wobKeys) {
+            const rop = activeState.wobRops[wobKey];
+            lines.push(`${wobKey},${Number.isFinite(rop) ? rop : ""}`);
+          }
+
+          lines.push("");
+          lines.push("ACTIVE-OPT-TRIALS");
+          lines.push("RPM,ROP");
+          if (activeState.optTrials) {
+            const trialRpms = Object.keys(activeState.optTrials)
+              .map(Number)
+              .sort((a,b)=>a-b);
+            for (const r of trialRpms) {
+              const rop = activeState.optTrials[r];
+              lines.push(`${r},${Number.isFinite(rop) ? rop : ""}`);
+            }
+          }
+
+          lines.push("");
+          lines.push("ACTIVE-SUMMARY");
+          lines.push(`OptRpm,${activeState.optRpm || ""}`);
+          lines.push(`WobLow,${activeState.wobLow || ""}`);
+          lines.push(`WobHigh,${activeState.wobHigh || ""}`);
+          lines.push(`SelectedWob,${activeState.selectedWob || ""}`);
+          lines.push(`DerivedOptRpm,${activeState.derivedOptRpm || ""}`);
+          lines.push(`FinalRpm,${activeState.finalRpm || ""}`);
+
+          const blob = new Blob([lines.join("\n")], { type: "text/csv" });
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = "drill_off_results.csv";
+          a.click();
+          URL.revokeObjectURL(a.href);
+        });
+
+        // CSV parsing & import
+        function parseResultsCsv(text) {
+          const lines = text.split(/\r?\n/).map((l) => l.trim());
+          const out = {
+            meta: null,
+            durations: [],
+            timestamps: {},
+            legacy: false,
+            errors: [],
+            active: {},
+          };
+          let i = 0;
+          // optional META line
+          if (lines[i] && lines[i].startsWith("META,")) {
+            out.meta = lines[i].slice(5);
+            i++;
+            if (lines[i] === "") i++; // skip blank
+          }
+          // Read durations until TIMESTAMPS or end
+          if (!(lines[i] && lines[i].startsWith("RPM,"))) {
+            out.errors.push("Missing durations header");
+          }
+          // skip header
+          if (lines[i] && lines[i].startsWith("RPM,")) i++;
+          for (; i < lines.length; i++) {
+            const ln = lines[i];
+            if (!ln) continue;
+            if (ln === "TIMESTAMPS") {
+              i++;
+              break;
+            }
+            if (ln.startsWith("Minimum,")) {
+              out.durations.push({ summary: ln });
+              continue;
+            }
+            const parts = ln.split(",");
+            if (parts.length < 3) {
+              out.errors.push(`Bad duration line: ${ln}`);
+              continue;
+            }
+            const rpm = Number(parts[0]);
+            const range = parts[1];
+            const seconds = Number(parts[2]);
+            if (!Number.isFinite(rpm) || !range) {
+              out.errors.push(`Invalid duration row: ${ln}`);
+              continue;
+            }
+            out.durations.push({ rpm, range, seconds });
+          }
+          // If we reached EOF without TIMESTAMPS => legacy
+          if (i >= lines.length) {
+            out.legacy = true;
+            return out;
+          }
+          // Now expect TIMESTAMPS header row
+          if (!(lines[i] && lines[i].startsWith("RPM,"))) {
+            out.errors.push("Missing TIMESTAMPS header");
+            return out;
+          }
+          i++;
+          for (; i < lines.length; i++) {
+            const ln = lines[i];
+            if (!ln) continue; // Section switches
+            if (ln === "ACTIVE-SETTINGS") {
+              i++;
+              while (
+                i < lines.length &&
+                lines[i] &&
+                !lines[i].startsWith("ACTIVE-")
+              ) {
+                const p = lines[i].split(",");
+                if (p[0] === "Unit") out.active.unit = p[1];
+                else if (p[0] === "CountdownMinutes")
+                  out.active.countdownMinutes = Number(p[1]);
+                else if (p[0] === "WobStep") out.active.wobStep = Number(p[1]);
+                else if (p[0] === "RpmStep") out.active.rpmStep = Number(p[1]);
+                i++;
+              }
+              i--;
+              continue;
+            }
+            if (ln === "ACTIVE-WOB-TABLE" || ln === "ACTIVE-WOB-ROPS") {
+              // support older "ACTIVE-WOB-ROPS" and new "ACTIVE-WOB-TABLE"
+              i++;
+              out.active.wobTable = out.active.wobTable || {};
+              // skip header if present
+              if (lines[i] && lines[i].startsWith("WOB,")) i++;
+              while (
+                i < lines.length &&
+                lines[i] &&
+                !lines[i].startsWith("ACTIVE-")
+              ) {
+                const p = lines[i].split(",");
+                if (p.length >= 2) {
+                  const wob = Number(p[0]);
+                  const rop = p[1] === "" ? "" : Number(p[1]);
+                  if (Number.isFinite(wob)) {
+                    out.active.wobTable[wob] = rop;
+                  }
+                } else if (p.length === 3 && p[0]) {
+                  // fallback for WOBType, WOBklbf, ROP lines from older export
+                  const wob = Number(p[1]);
+                  const rop = p[2] === "" ? "" : Number(p[2]);
+                  if (Number.isFinite(wob)) out.active.wobTable[wob] = rop;
+                }
+                i++;
+              }
+              i--;
+              continue;
+            }
+            if (ln === "ACTIVE-OPT-TRIALS" || ln === "ACTIVE-RPM-TRIALS") {
+              i++;
+              out.active.optTrials = out.active.optTrials || {};
+              // skip header if present
+              if (lines[i] && lines[i].startsWith("RPM,")) i++;
+              while (
+                i < lines.length &&
+                lines[i] &&
+                !lines[i].startsWith("ACTIVE-")
+              ) {
+                const p = lines[i].split(",");
+                if (p.length >= 1) {
+                  const rpm = Number(p[0]);
+                  const rop = p[1] === "" ? "" : Number(p[1]);
+                  if (Number.isFinite(rpm) && rop !== "") out.active.optTrials[rpm] = rop;
+                }
+                i++;
+              }
+              i--;
+              continue;
+            }
+            if (ln === "ACTIVE-SUMMARY") {
+              i++;
+              out.active.summary = out.active.summary || {};
+              while (
+                i < lines.length &&
+                lines[i] &&
+                !lines[i].startsWith("ACTIVE-")
+              ) {
+                const p = lines[i].split(",");
+                const key = p[0];
+                const val = p[1] === "" ? null : Number(p[1]);
+                if (key === "FinalRpm" || key === "FinalRPM") out.active.summary.finalRpm = val;
+                else if (key === "DerivedOptRpm" || key === "DerivedOptRPM") out.active.summary.derivedOptRpm = val;
+                else if (key === "OptRpm") out.active.summary.optRpm = val;
+                else if (key === "WobLow") out.active.summary.wobLow = val;
+                else if (key === "WobHigh") out.active.summary.wobHigh = val;
+                else if (key === "SelectedWob") out.active.summary.selectedWob = val;
+                i++;
+              }
+              i--;
+              continue;
+            }
+            const parts = ln.split(",");
+            if (parts.length < 3) {
+              out.errors.push(`Bad timestamp line: ${ln}`);
+              continue;
+            }
+            const rpm = Number(parts[0]);
+            const wob = Number(parts[1]);
+            const ts = parts.slice(2).join(",") || "";
+            if (!Number.isFinite(rpm) || !Number.isFinite(wob)) {
+              out.errors.push(`Invalid timestamp row: ${ln}`);
+              continue;
+            }
+            if (!out.timestamps[rpm]) out.timestamps[rpm] = {};
+            out.timestamps[rpm][wob] = ts;
+          }
+          return out;
+        }
+
+        function applyImportedDurations(durations) {
+          // Clear any previous cell text
+          document
+            .querySelectorAll("#tbl-calc td")
+            .forEach((td) => (td.textContent = ""));
+          const byRpm = {};
+          for (const d of durations) {
+            if (d && d.rpm) {
+              if (!byRpm[d.rpm]) byRpm[d.rpm] = [];
+              byRpm[d.rpm].push(d);
+            }
+          }
+          const collected = [];
+          for (const rpmStr of Object.keys(byRpm)) {
+            const arr = byRpm[rpmStr];
+            for (const rec of arr) {
+              const cellIdStr = `d_${rec.range.replace("-", "_")}_${rec.rpm}`;
+              const td = document.getElementById(cellIdStr);
+              if (td) {
+                td.textContent = Number.isFinite(rec.seconds)
+                  ? formatSec(rec.seconds)
+                  : rec.seconds;
+                if (Number.isFinite(rec.seconds))
+                  collected.push({
+                    rpm: rec.rpm,
+                    range: rec.range,
+                    seconds: rec.seconds,
+                  });
               }
             }
           }
-          
-          // Report invalid RPMs that violate constraint
-          if(invalidRpms.length){
-            msg.textContent = `Cannot import: RPMs ${invalidRpms.join(', ')} violate WOB×RPM<9000 constraint.`;
-            evt.target.value='';
-            return;
-          }
-          
-          // Add missing valid RPMs
-          if(missingRpms.length){
-            for(const rpm of missingRpms){
-              rpmWobs.set(rpm, allowedWobsForRpm(rpm));
+          // recompute global min from imported durations
+          const valid = collected.filter((d) => Number.isFinite(d.seconds));
+          document
+            .querySelectorAll(".colMin, .globalMin")
+            .forEach((el) => el.classList.remove("colMin", "globalMin"));
+          for (const rpm of allRpms()) {
+            const col = valid
+              .filter((d) => d.rpm === Number(rpm))
+              .sort((a, b) => a.seconds - b.seconds);
+            if (col.length) {
+              const best = col[0];
+              const td = document.getElementById(
+                `d_${best.range.replace("-", "_")}_${best.rpm}`
+              );
+              if (td) td.classList.add("colMin");
             }
-            renderHeaders();
-            renderInputTable();
-            renderCalcTable();
-            restoreInputState(filterSnapshot(snapshot, rpmWobs));
           }
-          
-          // Now apply the imported durations
-          applyImportedDurations(parsed.durations);
-          
-          // Enhanced feedback message
-          if(missingRpms.length){
-            msg.textContent = `Added ${missingRpms.length} new RPM column(s): ${missingRpms.sort((a,b)=>a-b).join(', ')}. Imported durations (no timestamps).`;
+          if (valid.length) {
+            valid.sort((a, b) => a.seconds - b.seconds);
+            const best = valid[0];
+            document.getElementById("min-time").textContent = formatSec(
+              best.seconds
+            );
+            document.getElementById("min-rpm").textContent = String(best.rpm);
+            document.getElementById("min-range").textContent =
+              best.range.replace("-", " - ");
+            const bestCell = document.getElementById(
+              `d_${best.range.replace("-", "_")}_${best.rpm}`
+            );
+            if (bestCell) bestCell.classList.add("globalMin");
           } else {
-            msg.textContent = 'Imported durations only (no timestamps). Timestamps remain empty.';
+            document.getElementById("min-time").textContent = "–";
+            document.getElementById("min-rpm").textContent = "–";
+            document.getElementById("min-range").textContent = "–";
+          }
+          // Propagate passive results into Active test UI after imported durations
+          try {
+            updateActiveSeed();
+          } catch (e) {}
+        }
+
+        // Restore activeState from parsed active object
+        function restoreActiveState(activeData) {
+          if (!activeData) return;
+          try {
+            if (activeData.unit) activeState.ropUnit = activeData.unit;
+            if (Number.isFinite(activeData.countdownMinutes))
+              activeState.countdownMinutes = activeData.countdownMinutes;
+            if (Number.isFinite(activeData.wobStep))
+              document.getElementById("wobStep").value = String(activeData.wobStep);
+            if (Number.isFinite(activeData.rpmStep))
+              document.getElementById("rpmStep").value = String(activeData.rpmStep);
+
+            // wob table
+            if (activeData.wobTable) {
+              activeState.wobRops = {};
+              for (const k of Object.keys(activeData.wobTable)) {
+                const wob = Number(k);
+                const rop = activeData.wobTable[k];
+                if (Number.isFinite(wob) && Number.isFinite(Number(rop))) {
+                  activeState.wobRops[wob] = Number(rop);
+                }
+              }
+            }
+
+            // opt trials
+            if (activeData.optTrials) {
+              activeState.optTrials = {};
+              for (const k of Object.keys(activeData.optTrials)) {
+                const rpm = Number(k);
+                const rop = activeData.optTrials[k];
+                if (Number.isFinite(rpm) && Number.isFinite(Number(rop))) {
+                  activeState.optTrials[rpm] = Number(rop);
+                }
+              }
+            }
+
+            // summary
+            if (activeData.summary) {
+              const s = activeData.summary;
+              if (Number.isFinite(s.optRpm)) activeState.optRpm = s.optRpm;
+              if (Number.isFinite(s.wobLow)) activeState.wobLow = s.wobLow;
+              if (Number.isFinite(s.wobHigh)) activeState.wobHigh = s.wobHigh;
+              if (Number.isFinite(s.selectedWob)) activeState.selectedWob = s.selectedWob;
+              if (Number.isFinite(s.derivedOptRpm)) activeState.derivedOptRpm = s.derivedOptRpm;
+              if (Number.isFinite(s.finalRpm)) activeState.finalRpm = s.finalRpm;
+            }
+
+            // re-render active UI
+            try {
+              renderActiveWobTable();
+              renderOptimumRpmTrialsTable();
+              refreshFinalizeState();
+            } catch (e) {}
+          } catch (e) {
+            console.error("restoreActiveState error", e);
           }
         }
-      }catch(err){ msg.textContent='Import error: '+(err&&err.message?err.message:String(err)); }
-      finally{ evt.target.value=''; }
-    };
-    reader.readAsText(file);
-  });
 
-  // New RPM save/load listeners
-  document.getElementById('btn-save-rpms').addEventListener('click', saveRpms);
-  document.getElementById('btn-load-rpms').addEventListener('click', ()=>document.getElementById('file-rpms').click());
-  document.getElementById('file-rpms').addEventListener('change', loadRpmsFile);
+        // Import handler
+        document
+          .getElementById("btn-import")
+          .addEventListener("click", () =>
+            document.getElementById("file-results").click()
+          );
+        document
+          .getElementById("file-results")
+          .addEventListener("change", (evt) => {
+            const msg = document.getElementById("resultsMsg");
+            msg.textContent = "";
+            const file = evt.target.files && evt.target.files[0];
+            if (!file) {
+              msg.textContent = "No file selected.";
+              return;
+            }
+            const reader = new FileReader();
+            reader.onerror = () => {
+              msg.textContent = "Failed to read file.";
+              evt.target.value = "";
+            };
+            reader.onload = () => {
+              try {
+                const parsed = parseResultsCsv(reader.result);
+                if (parsed.errors.length) {
+                  msg.textContent = "Parse error: " + parsed.errors[0];
+                  evt.target.value = "";
+                  return;
+                }
+                // If timestamps present, attempt full restore
+                if (!parsed.legacy && Object.keys(parsed.timestamps).length) {
+                  const incomingRpms = Object.keys(parsed.timestamps)
+                    .map((r) => Number(r))
+                    .sort((a, b) => a - b);
+                  const current = allRpms();
+                  const anyTimestamps = Array.from(
+                    document.querySelectorAll(
+                      "#tbl-input input[type=datetime-local]"
+                    )
+                  ).some((inp) => inp.value);
+                  const differs =
+                    incomingRpms.length !== current.length ||
+                    incomingRpms.some((r, i) => r !== current[i]);
+                  if (differs && anyTimestamps) {
+                    if (
+                      !confirm(
+                        "Replace current RPMs? All timestamps will be cleared."
+                      )
+                    ) {
+                      msg.textContent = "Load cancelled.";
+                      evt.target.value = "";
+                      return;
+                    }
+                  }
+                  // Replace RPM map if needed
+                  if (differs) {
+                    rpmWobs = new Map();
+                    for (const r of incomingRpms)
+                      rpmWobs.set(r, allowedWobsForRpm(r));
+                    renderHeaders();
+                    renderInputTable();
+                    renderCalcTable();
+                  }
+                  // Restore timestamps
+                  // Build snapshot-like object
+                  const snap = {};
+                  for (const rStr of Object.keys(parsed.timestamps)) {
+                    const r = Number(rStr);
+                    snap[r] = {};
+                    for (const wobStr of Object.keys(parsed.timestamps[rStr])) {
+                      snap[r][wobStr] = parsed.timestamps[rStr][wobStr];
+                    }
+                  }
+                  restoreInputState(snap);
+                  recalc();
+                  msg.textContent = `Loaded ${
+                    Object.keys(parsed.timestamps).length
+                  } RPM(s) with timestamps.`;
+                  // Restore active test data if present
+                  try {
+                    restoreActiveState(parsed.active);
+                    if (parsed.active && Object.keys(parsed.active).length)
+                      msg.textContent += " Active test data restored.";
+                  } catch (e) {
+                    console.error(e);
+                  }
+                } else {
+                  // Legacy or no timestamps: detect and add missing RPM columns
+                  const snapshot = captureInputState();
+                  const incomingRpms = new Set();
+                  const invalidRpms = [];
 
-  // Initial render
-  renderHeaders(); renderInputTable(); renderCalcTable(); recalc();
+                  // Scan all durations for unique RPMs
+                  for (const d of parsed.durations) {
+                    if (d && d.rpm && Number.isFinite(d.rpm)) {
+                      incomingRpms.add(d.rpm);
+                    }
+                  }
 
-  // Initial active WOB table render
-  try{ renderActiveWobTable(); }catch(e){}
-  try{ renderOptimumRpmTrialsTable(); }catch(e){}
-})();
-</script>
-</body>
+                  // Check which RPMs are missing and validate them
+                  const missingRpms = [];
+                  for (const rpm of Array.from(incomingRpms)) {
+                    if (!rpmWobs.has(rpm)) {
+                      const wobs = allowedWobsForRpm(rpm);
+                      if (wobs.length === 0) {
+                        invalidRpms.push(rpm);
+                      } else {
+                        missingRpms.push(rpm);
+                      }
+                    }
+                  }
+
+                  // Report invalid RPMs that violate constraint
+                  if (invalidRpms.length) {
+                    msg.textContent = `Cannot import: RPMs ${invalidRpms.join(
+                      ", "
+                    )} violate WOB×RPM<9000 constraint.`;
+                    evt.target.value = "";
+                    return;
+                  }
+
+                  // Add missing valid RPMs
+                  if (missingRpms.length) {
+                    for (const rpm of missingRpms) {
+                      rpmWobs.set(rpm, allowedWobsForRpm(rpm));
+                    }
+                    renderHeaders();
+                    renderInputTable();
+                    renderCalcTable();
+                    restoreInputState(filterSnapshot(snapshot, rpmWobs));
+                  }
+
+                  // Now apply the imported durations
+                  applyImportedDurations(parsed.durations);
+
+                  // Restore active test data if present
+                  try {
+                    restoreActiveState(parsed.active);
+                    if (parsed.active && Object.keys(parsed.active).length)
+                      msg.textContent += " Active test data restored.";
+                  } catch (e) {
+                    console.error(e);
+                  }
+                  // Enhanced feedback message
+                  if (missingRpms.length) {
+                    msg.textContent = `Added ${
+                      missingRpms.length
+                    } new RPM column(s): ${missingRpms
+                      .sort((a, b) => a - b)
+                      .join(", ")}. Imported durations (no timestamps).`;
+                  } else {
+                    msg.textContent =
+                      "Imported durations only (no timestamps). Timestamps remain empty.";
+                  }
+                }
+              } catch (err) {
+                msg.textContent =
+                  "Import error: " +
+                  (err && err.message ? err.message : String(err));
+              } finally {
+                evt.target.value = "";
+              }
+            };
+            reader.readAsText(file);
+          });
+
+        // New RPM save/load listeners
+        document
+          .getElementById("btn-save-rpms")
+          .addEventListener("click", saveRpms);
+        document
+          .getElementById("btn-load-rpms")
+          .addEventListener("click", () =>
+            document.getElementById("file-rpms").click()
+          );
+        document
+          .getElementById("file-rpms")
+          .addEventListener("change", loadRpmsFile);
+
+        // Initial render
+        renderHeaders();
+        renderInputTable();
+        renderCalcTable();
+        recalc();
+
+        // Initial active WOB table render
+        try {
+          renderActiveWobTable();
+        } catch (e) {}
+        try {
+          renderOptimumRpmTrialsTable();
+        } catch (e) {}
+        // Initialize active summary
+        updateActiveSummary();
+      })();
+    </script>
+  </body>
 </html>
