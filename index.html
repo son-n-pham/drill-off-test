@@ -43,6 +43,12 @@
           color-mix(in oklab, var(--accent), transparent 85%);
         --picker-disabled-bg: color-mix(in oklab, var(--panel), black 6%);
         --picker-disabled-text: color-mix(in oklab, var(--text), black 40%);
+
+        /* Field standardization tokens */
+        --field-radius: 8px;
+        --field-pad: 8px 10px;
+        --field-max: 260px;
+        --field-min-height: 42px;
       }
       html,
       body {
@@ -57,6 +63,8 @@
         padding: clamp(12px, 4vw, 24px);
         box-sizing: border-box;
         transition: background 0.2s ease, color 0.2s ease;
+        max-width: 1200px;
+        margin-inline: auto;
       }
       h1,
       h2,
@@ -121,15 +129,21 @@
         z-index: 3;
       }
       .grid input[type="datetime-local"] {
-        width: clamp(120px, 40vw, 220px);
+        width: clamp(150px, 22ch, 230px);
         background: color-mix(in oklab, var(--panel), black 10%);
         color: var(--text);
         border: 1px solid var(--border-subtle);
-        border-radius: 8px;
-        padding: 6px 8px;
+        border-radius: var(--field-radius);
+        padding: var(--field-pad);
+        min-height: var(--field-min-height);
+        box-sizing: border-box;
+        text-align: center;
       }
       .grid input[disabled] {
         opacity: 0.35;
+      }
+      .grid input[type="number"] {
+        text-align: center;
       }
 
       /* Enhanced picker styles for visibility and accessibility */
@@ -290,15 +304,28 @@
                 grid-template-columns: repeat(2, minmax(0, 1fr));
               }
             }
+            /* Desktop layout refinements for screens > 1024px */
+            @media (min-width: 1025px) {
+              .controls {
+                justify-items: start;
+                max-width: 900px;
+              }
+              .pickerWrap {
+                justify-content: flex-start;
+              }
+              .grid input[type="number"] {
+                text-align: center;
+              }
+            }
       button {
         background: var(--btn);
         color: var(--text);
         border: 1px solid color-mix(in oklab, var(--grid), white 10%);
-        border-radius: 10px;
-        padding: 8px 12px;
+        border-radius: var(--field-radius);
+        padding: var(--field-pad);
         cursor: pointer;
         font-size: clamp(13px, 2.5vw, 14px);
-        min-height: 44px;
+        min-height: var(--field-min-height);
       }
       button:hover {
         background: var(--btn2);
@@ -333,21 +360,42 @@
       }
       .controls {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(clamp(140px, 45%, 180px), 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
         gap: 8px 12px;
         align-items: center;
       }
       .controls input {
         width: 100%;
-        padding: 7px 9px;
-        border-radius: 8px;
+        max-width: var(--field-max);
+        padding: var(--field-pad);
+        border-radius: var(--field-radius);
         border: 1px solid var(--border-subtle);
         background: color-mix(in oklab, var(--panel), black 10%);
         color: var(--text);
         text-align: center;
+        min-height: var(--field-min-height);
+        box-sizing: border-box;
       }
       .controls label {
         color: var(--muted);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: nowrap;
+        white-space: nowrap;
+      }
+      /* Narrow width for number-only inputs (RPM, WOB Step, RPM Step) */
+      .controls input[type="number"] {
+        width: 90px !important;
+        max-width: 90px;
+        min-width: 70px;
+        flex-shrink: 0;
+      }
+      /* Mobile: allow wrapping on very small screens */
+      @media (max-width: 480px) {
+        .controls label {
+          flex-wrap: wrap;
+        }
       }
       .pickerWrap {
         display: flex;
@@ -388,8 +436,10 @@
         background: color-mix(in oklab, var(--panel), black 10%);
         color: var(--text);
         border: 1px solid color-mix(in oklab, var(--grid), white 10%);
-        border-radius: 8px;
-        padding: 6px 8px;
+        border-radius: var(--field-radius);
+        padding: var(--field-pad);
+        min-height: var(--field-min-height);
+        box-sizing: border-box;
       }
       .swatch {
         width: 32px;
@@ -501,6 +551,29 @@
         font-size: 28px;
         font-weight: 700;
       }
+      /* === Unified Input Field Centering ====================================
+         Ensures all interactive inputs render their value centered both
+         vertically and horizontally regardless of native control quirks.
+         Applied late in cascade to override earlier scattered rules. */
+      .grid input[type="datetime-local"],
+      .grid input[type="number"],
+      .controls input,
+      .controls input[type="number"],
+      .themebar select,
+      .themebar input[type="color"] {
+        height: var(--field-min-height);
+        line-height: var(--field-min-height);
+        padding: 0 10px; /* vertical padding removed to aid centering */
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        vertical-align: middle;
+      }
+      /* Remove default spinner margin that can shift vertical centering */
+      input[type="number"]::-webkit-inner-spin-button,
+      input[type="number"]::-webkit-outer-spin-button { margin: 0; }
+      /* Firefox number input normalization */
+      input[type="number"] { -moz-appearance: textfield; }
     </style>
   </head>
   <body>
@@ -555,14 +628,15 @@
       <h2 id="passive-title">Passive Drill‑Off Test</h2>
       <section class="panel">
         <h3>Passive Setup: Add custom Bit RPM column</h3>
-        <div class="controls" style="margin: 8px 0 6px">
-          <label for="newRpm">RPM</label>
+        <div style="display: flex; align-items: center; gap: 8px; margin: 8px 0 6px; flex-wrap: wrap;">
+          <label for="newRpm" style="color: var(--muted);">RPM</label>
           <input
             type="number"
             id="newRpm"
             placeholder="e.g., 175"
             min="1"
             step="1"
+            style="width: 90px; max-width: 90px; min-width: 70px;"
           />
           <button id="btn-add-col">Add column</button>
           <div id="addMsg" class="note" aria-live="polite"></div>
