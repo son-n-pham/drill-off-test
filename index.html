@@ -166,13 +166,31 @@
         color: var(--muted);
         margin-left: 8px;
       }
+      /* Improved highlighting for passive results
+         - Use solid borders and subtle gradients instead of outline
+         - Add box-shadows for depth and ensure globalMin dominates
+         - Use !important on borders to avoid collision with table cell borders
+      */
       .colMin {
-        outline: 2px solid color-mix(in oklab, var(--accent), white 20%);
+        background: linear-gradient(135deg,
+          color-mix(in oklab, var(--accent), transparent 90%),
+          color-mix(in oklab, var(--accent), transparent 95%));
+        border: 3px solid var(--accent) !important;
+        box-shadow: inset 0 0 8px color-mix(in oklab, var(--accent), transparent 85%);
+        font-weight: 600;
+        position: relative;
+        z-index: 1;
       }
       .globalMin {
-        outline: 3px solid var(--good);
-        box-shadow: 0 0 0 2px color-mix(in oklab, var(--good), transparent 80%)
-          inset;
+        background: linear-gradient(135deg,
+          color-mix(in oklab, var(--good), transparent 88%),
+          color-mix(in oklab, var(--good), transparent 93%));
+        border: 3px solid var(--good) !important;
+        box-shadow: 0 0 16px color-mix(in oklab, var(--good), transparent 65%),
+                    inset 0 0 10px color-mix(in oklab, var(--good), transparent 80%);
+        font-weight: 700;
+        position: relative;
+        z-index: 2; /* make globalMin sit above colMin when both applied */
       }
       .btns {
         display: flex;
