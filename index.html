@@ -608,9 +608,9 @@
       <div class="btns">
         <button id="btn-sample">Load sample data</button>
         <button id="btn-clear">Clear all</button>
-        <button id="btn-export">Download results (.csv)</button>
+        <button id="btn-export">Save (.csv)</button>
         <button id="btn-import" title="Load results from CSV">
-          Load results (.csv)
+          Load (.csv)
         </button>
         <input
           type="file"
@@ -629,7 +629,7 @@
           <input type="checkbox" id="useMudMotor" style="width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer;" />
           Using Mud Motor?
         </label>
-        <span class="note" style="font-weight: normal;">(Motor adds RPM from mud flow)</span>
+        <span class="note" style="font-weight: normal;">(Motor adds motor RPM from mud flow)</span>
       </h3>
       
       <div id="mud-motor-controls" style="display: none; margin-top: 12px;">
@@ -637,7 +637,7 @@
           <!-- Speed Ratio Input -->
           <label style="display: flex; align-items: center; gap: 8px;">
             Speed Ratio (rev/gal)
-            <input type="number" id="motorSpeedRatio" placeholder="e.g., 0.5" min="0" step="0.01" style="width: 100px;" />
+            <input type="number" id="motorSpeedRatio" placeholder="e.g., 0.11" min="0" step="0.01" style="width: 100px;" />
           </label>
         </div>
         
@@ -1156,6 +1156,10 @@
         let rpmWobs = new Map();
         for (const r of defaultRpms) rpmWobs.set(r, allowedWobsForRpm(r));
 
+        // Store calculation context for each RPM column added via Apply button
+        // Map: bitRpm -> { inputSource: 'flow'|'motor'|'surface', flowRate, motorRpm, surfaceRpm, bitRpm }
+        const rpmMetadata = new Map();
+
         const theadInput = document.getElementById("thead-input");
         const tbodyInput = document.getElementById("tbody-input");
         const theadCalc = document.getElementById("thead-calc");
@@ -1267,34 +1271,236 @@
         }
 
         function renderHeaders() {
-          theadInput
-            .querySelectorAll("th:not(:first-child)")
-            .forEach((n) => n.remove());
-          theadCalc
-            .querySelectorAll("th:not(:first-child)")
-            .forEach((n) => n.remove());
-          for (const rpm of allRpms()) {
-            const mk = () => {
-              const th = document.createElement("th");
-              th.setAttribute("scope", "col");
-              const wrap = document.createElement("div");
-              wrap.className = "rpmHdr";
-              const lbl = document.createElement("span");
-              lbl.textContent = `${rpm} RPM`;
-              const del = document.createElement("button");
-              del.className = "delBtn";
-              del.title = `Remove RPM ${rpm}`;
-              del.setAttribute("aria-label", `Remove RPM column ${rpm}`);
-              del.textContent = "×";
-              del.addEventListener("click", () => removeRpm(rpm));
-              wrap.appendChild(lbl);
-              wrap.appendChild(del);
-              th.appendChild(wrap);
-              return th;
-            };
-            theadInput.appendChild(mk());
-            theadCalc.appendChild(mk());
+          // Get thead elements - note: theadInput may have multiple rows now
+          const inputTable = document.getElementById('tbl-input');
+          const calcTable = document.getElementById('tbl-calc');
+          const theadInputEl = inputTable.querySelector('thead');
+          const theadCalcEl = calcTable.querySelector('thead');
+          
+          // Clear all rows from input thead except keep structure
+          theadInputEl.innerHTML = '';
+          theadCalcEl.querySelectorAll("th:not(:first-child)").forEach((n) => n.remove());
+          
+          // Helper to create INPUT/CALC badge
+          const makeBadge = (isInput) => {
+            const badge = document.createElement('span');
+            badge.style.cssText = 'padding: 1px 5px; border-radius: 3px; font-size: 9px; font-weight: 600; margin-left: 4px;';
+            if (isInput) {
+              badge.textContent = 'INPUT';
+              badge.style.background = 'var(--accent)';
+              badge.style.color = 'var(--bg)';
+            } else {
+              badge.textContent = 'CALC';
+              badge.style.background = 'var(--good)';
+              badge.style.color = 'white';
+            }
+            return badge;
+          };
+          
+          const rpms = allRpms();
+          const hasAnyMetadata = rpms.some(rpm => rpmMetadata.has(rpm));
+          
+          // === INPUT TABLE HEADER (with sub-rows) ===
+          // Row 1: Main header with RPM labels and delete buttons
+          const mainRow = document.createElement('tr');
+          mainRow.id = 'thead-input';
+          const mainRowhdr = document.createElement('th');
+          mainRowhdr.className = 'rowhdr';
+          mainRowhdr.textContent = 'WOB (klbf)';
+          if (hasAnyMetadata) {
+            mainRowhdr.setAttribute('rowspan', '5');
           }
+          mainRow.appendChild(mainRowhdr);
+          
+          for (const rpm of rpms) {
+            const th = document.createElement('th');
+            th.setAttribute('scope', 'col');
+            const wrap = document.createElement('div');
+            wrap.className = 'rpmHdr';
+            const lbl = document.createElement('span');
+            lbl.textContent = `${rpm} RPM`;
+            const del = document.createElement('button');
+            del.className = 'delBtn';
+            del.title = `Remove RPM ${rpm}`;
+            del.setAttribute('aria-label', `Remove RPM column ${rpm}`);
+            del.textContent = '×';
+            del.addEventListener('click', () => removeRpm(rpm));
+            wrap.appendChild(lbl);
+            wrap.appendChild(del);
+            th.appendChild(wrap);
+            mainRow.appendChild(th);
+          }
+          theadInputEl.appendChild(mainRow);
+          
+          // Sub-rows only if there is any metadata
+          if (hasAnyMetadata) {
+            const subRowLabels = [
+              { key: 'flowRate', label: 'Flow Rate (gpm)', inputField: 'flow' },
+              { key: 'motorRpm', label: 'Motor RPM', inputField: 'motor' },
+              { key: 'surfaceRpm', label: 'Surface RPM', inputField: 'surface' },
+              { key: 'bitRpm', label: 'Bit RPM', inputField: null }
+            ];
+            
+            for (const rowDef of subRowLabels) {
+              const subRow = document.createElement('tr');
+              subRow.className = 'sub-row';
+              subRow.style.cssText = 'font-size: 11px; background: var(--panel-alt);';
+              
+              for (const rpm of rpms) {
+                const th = document.createElement('th');
+                th.style.cssText = 'padding: 4px 6px; text-align: center; font-weight: normal;';
+                
+                let meta = rpmMetadata.get(rpm);
+                if (!meta) {
+                  // Check if we have ANY metadata to extrapolate from
+                  const refMeta = rpmMetadata.values().next().value;
+                  
+                  if (refMeta) {
+                    // Extrapolate from reference metadata
+                    // Assumption: The input parameter (Flow, Motor, or Surface) stays constant across columns
+                    meta = {
+                      inputSource: refMeta.inputSource,
+                      bitRpm: rpm
+                    };
+                    
+                    if (refMeta.inputSource === 'flow') {
+                      // Flow constant -> Motor constant -> Surface varies
+                      meta.flowRate = refMeta.flowRate;
+                      meta.motorRpm = refMeta.motorRpm;
+                      meta.surfaceRpm = Math.max(0, rpm - (meta.motorRpm || 0));
+                    } else if (refMeta.inputSource === 'motor') {
+                      // Motor constant -> Flow constant -> Surface varies
+                      meta.motorRpm = refMeta.motorRpm;
+                      meta.flowRate = refMeta.flowRate;
+                      meta.surfaceRpm = Math.max(0, rpm - (meta.motorRpm || 0));
+                    } else if (refMeta.inputSource === 'surface') {
+                      // Surface constant -> Motor varies -> Flow varies
+                      meta.surfaceRpm = refMeta.surfaceRpm;
+                      meta.motorRpm = Math.max(0, rpm - (meta.surfaceRpm || 0));
+                      // Need speed ratio to get flow. Infer from ref or DOM
+                      let ratio = 0;
+                      if (refMeta.motorRpm > 0 && refMeta.flowRate > 0) {
+                        ratio = refMeta.motorRpm / refMeta.flowRate;
+                      } else {
+                        ratio = parseFloat(document.getElementById('motorSpeedRatio').value) || 0;
+                      }
+                      
+                      if (ratio > 0) {
+                        meta.flowRate = meta.motorRpm / ratio;
+                      }
+                    }
+                  } else {
+                    // No reference -> Default to Rotary Drilling (Surface=Bit, Motor=0)
+                    meta = {
+                      inputSource: 'surface',
+                      flowRate: undefined, // undefined -> "—"
+                      motorRpm: 0,
+                      surfaceRpm: rpm,
+                      bitRpm: rpm
+                    };
+                  }
+                }
+
+                if (meta) {
+                  const value = meta[rowDef.key];
+                  const isInput = rowDef.inputField && meta.inputSource === rowDef.inputField;
+                  
+                  // Create content wrapper
+                  const wrapper = document.createElement('div');
+                  wrapper.style.cssText = 'display: flex; align-items: center; justify-content: center; gap: 4px; flex-wrap: wrap;';
+                  
+                  const labelSpan = document.createElement('span');
+                  labelSpan.style.color = 'var(--muted)';
+                  labelSpan.textContent = `${rowDef.label}: `;
+                  
+                  let valueElement;
+                  
+                  if (rowDef.inputField) {
+                    // Editable input
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.step = rowDef.key === 'motorRpm' ? '0.1' : '1';
+                    input.min = '0';
+                    input.style.cssText = 'width: 45px; font-size: 11px; padding: 0 2px; border: 1px solid var(--border); border-radius: 2px; background: var(--bg); color: var(--text); font-weight: 600; text-align: center;';
+                    
+                    if (isInput) {
+                      input.style.borderColor = 'var(--accent)';
+                      input.style.background = 'color-mix(in srgb, var(--accent), transparent 90%)';
+                      input.style.color = 'var(--accent)';
+                    }
+                    
+                    if (value !== undefined) {
+                       input.value = rowDef.key === 'flowRate' || rowDef.key === 'surfaceRpm' ? Math.round(value) : value.toFixed(1);
+                    }
+                    
+                    input.addEventListener('change', (e) => handleColumnEdit(rpm, rowDef.inputField, e.target.value));
+                    valueElement = input;
+                  } else {
+                    // Read-only text (Bit RPM)
+                    const span = document.createElement('span');
+                    span.style.fontWeight = '600';
+                    span.style.color = 'var(--text)';
+                    if (value !== undefined) {
+                      span.textContent = Math.round(value);
+                    } else {
+                      span.textContent = '—';
+                    }
+                    valueElement = span;
+                  }
+                  
+                  wrapper.appendChild(labelSpan);
+                  wrapper.appendChild(valueElement);
+                  
+                  if (isInput) {
+                    wrapper.appendChild(makeBadge(true));
+                  } else if (rowDef.inputField && value !== undefined) {
+                    wrapper.appendChild(makeBadge(false));
+                  }
+                  
+                  th.appendChild(wrapper);
+                }
+                
+                subRow.appendChild(th);
+              }
+              
+              theadInputEl.appendChild(subRow);
+            }
+          }
+          
+          // === CALC TABLE HEADER (simple, no sub-rows) ===
+          // Rebuild the calc header row
+          let calcRow = theadCalcEl.querySelector('#thead-calc');
+          if (!calcRow) {
+            calcRow = document.createElement('tr');
+            calcRow.id = 'thead-calc';
+            const calcRowhdr = document.createElement('th');
+            calcRowhdr.className = 'rowhdr';
+            calcRowhdr.textContent = 'WOB Range (klbf)';
+            calcRow.appendChild(calcRowhdr);
+            theadCalcEl.appendChild(calcRow);
+          }
+          // Remove existing column headers except first
+          calcRow.querySelectorAll('th:not(:first-child)').forEach(n => n.remove());
+          
+          for (const rpm of rpms) {
+            const th = document.createElement('th');
+            th.setAttribute('scope', 'col');
+            const wrap = document.createElement('div');
+            wrap.className = 'rpmHdr';
+            const lbl = document.createElement('span');
+            lbl.textContent = `${rpm} RPM`;
+            const del = document.createElement('button');
+            del.className = 'delBtn';
+            del.title = `Remove RPM ${rpm}`;
+            del.setAttribute('aria-label', `Remove RPM column ${rpm}`);
+            del.textContent = '×';
+            del.addEventListener('click', () => removeRpm(rpm));
+            wrap.appendChild(lbl);
+            wrap.appendChild(del);
+            th.appendChild(wrap);
+            calcRow.appendChild(th);
+          }
+          
           updateEmptyStates();
         }
 
@@ -2966,6 +3172,69 @@ FinalRpm,
         // Target Bit RPM is ALWAYS INPUT
         let lastInputField = null;
 
+        // Update Apply button text based on lastInputField
+        function updateApplyButtonText() {
+          const btn = document.getElementById('btn-apply-bit-rpm');
+          if (!btn) return;
+          
+          let paramName = 'Bit RPM';
+          if (lastInputField === 'flow') {
+            paramName = 'Flow Rate';
+          } else if (lastInputField === 'motor') {
+            paramName = 'Motor RPM';
+          } else if (lastInputField === 'surface') {
+            paramName = 'Surface RPM';
+          }
+          
+          btn.textContent = `Apply ${paramName} to Passive Test`;
+        }
+
+        // Handle edits to sub-row inputs (Flow, Motor, Surface)
+        function handleColumnEdit(rpm, field, value) {
+           const val = parseFloat(value);
+           if (!Number.isFinite(val) || val < 0) return; // Ignore invalid
+           
+           // Get existing meta or create new based on this edit
+           let meta = rpmMetadata.get(rpm);
+           if (!meta) {
+             meta = { bitRpm: rpm };
+           }
+           
+           meta.inputSource = field;
+           const speedRatio = parseFloat(document.getElementById('motorSpeedRatio').value) || 0;
+           
+           if (field === 'surface') {
+             meta.surfaceRpm = val;
+             // Recalculate Motor: Motor = Bit - Surface
+             meta.motorRpm = Math.max(0, rpm - val);
+             // Recalculate Flow: Flow = Motor / Ratio
+             if (speedRatio > 0 && meta.motorRpm > 0) {
+               meta.flowRate = meta.motorRpm / speedRatio;
+             } else {
+               meta.flowRate = 0;
+             }
+           } else if (field === 'motor') {
+             meta.motorRpm = val;
+             // Recalculate Surface: Surface = Bit - Motor
+             meta.surfaceRpm = Math.max(0, rpm - val);
+             // Recalculate Flow: Flow = Motor / Ratio
+             if (speedRatio > 0 && val > 0) {
+               meta.flowRate = val / speedRatio;
+             } else {
+               meta.flowRate = 0;
+             }
+           } else if (field === 'flow') {
+             meta.flowRate = val;
+             // Recalculate Motor: Motor = Flow * Ratio
+             meta.motorRpm = val * speedRatio;
+             // Recalculate Surface: Surface = Bit - Motor
+             meta.surfaceRpm = Math.max(0, rpm - meta.motorRpm);
+           }
+           
+           rpmMetadata.set(rpm, meta);
+           renderHeaders(); // Re-render to update CALC values and badges
+        }
+
         // Update badge display for a field
         function updateBadge(fieldName, isInput, show = true) {
           const badge = document.getElementById(`badge-${fieldName}`);
@@ -3047,6 +3316,9 @@ FinalRpm,
             updateBadge('flow', false, false);
             updateInputStyle(calcFlowRateInput, false);
           }
+          
+          // Update Apply button text based on current input mode
+          updateApplyButtonText();
         }
 
         // Smart calculation logic
@@ -3183,17 +3455,35 @@ FinalRpm,
           }
           
           // Check if RPM already exists
+          let isUpdate = false;
           if (rpmWobs.has(targetRpm)) {
-            setAddMsg(`✓ ${targetRpm} RPM already exists in table`, 3000);
-            return;
+            // We proceed to update the metadata, but likely won't change WOBs
+            isUpdate = true;
           }
           
-          // Add the RPM column
+          // Add/Validate the RPM column
           const wobs = allowedWobsForRpm(targetRpm);
           if (wobs.length === 0) {
             setAddMsg(`⚠ ${targetRpm} RPM violates WOB×RPM < 9000 constraint`, 3000);
             return;
           }
+          
+          // Capture calculation values for metadata
+          const flowRate = parseFloat(calcFlowRateInput.value) || undefined;
+          const motorRpm = parseFloat(calcMotorRpmInput.value) || undefined;
+          const surfaceRpm = parseFloat(calcSurfaceRpmInput.value) || undefined;
+          
+          // Clear all existing metadata so all columns adopt the new input parameter
+          rpmMetadata.clear();
+          
+          // Store metadata for this RPM column (becomes the reference for extrapolation)
+          rpmMetadata.set(targetRpm, {
+            inputSource: lastInputField || 'flow', // default to flow if not set
+            flowRate: flowRate,
+            motorRpm: motorRpm,
+            surfaceRpm: surfaceRpm,
+            bitRpm: targetRpm
+          });
           
           const snapshot = captureInputState();
           rpmWobs.set(targetRpm, wobs);
@@ -3206,7 +3496,18 @@ FinalRpm,
           // Also populate the newRpm input for reference
           document.getElementById('newRpm').value = targetRpm;
           
-          setAddMsg(`✓ Added ${targetRpm} RPM column from calculator`, 3000);
+          // Create descriptive message based on input source
+          let paramInfo = '';
+          if (lastInputField === 'flow' && flowRate) {
+            paramInfo = ` (Flow Rate: ${Math.round(flowRate)} gpm)`;
+          } else if (lastInputField === 'motor' && motorRpm) {
+            paramInfo = ` (Motor RPM: ${motorRpm.toFixed(1)})`;
+          } else if (lastInputField === 'surface' && surfaceRpm) {
+            paramInfo = ` (Surface RPM: ${Math.round(surfaceRpm)})`;
+          }
+          
+          const actionWord = isUpdate ? 'Updated' : 'Added';
+          setAddMsg(`✓ ${actionWord} ${targetRpm} RPM column${paramInfo}`, 3000);
         });
       })();
     </script>
