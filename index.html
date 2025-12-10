@@ -622,6 +622,119 @@
       </div>
     </header>
 
+    <!-- MUD MOTOR SECTION -->
+    <section class="panel" id="mud-motor-section" style="margin-top: 16px; border: 2px solid color-mix(in oklab, var(--accent), transparent 50%); background: color-mix(in oklab, var(--panel), var(--accent) 3%);">
+      <h3 style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text);">
+          <input type="checkbox" id="useMudMotor" style="width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer;" />
+          Using Mud Motor?
+        </label>
+        <span class="note" style="font-weight: normal;">(Motor adds RPM from mud flow)</span>
+      </h3>
+      
+      <div id="mud-motor-controls" style="display: none; margin-top: 12px;">
+        <div class="controls" style="gap: 16px 24px;">
+          <!-- Speed Ratio Input -->
+          <label style="display: flex; align-items: center; gap: 8px;">
+            Speed Ratio (rev/gal)
+            <input type="number" id="motorSpeedRatio" placeholder="e.g., 0.5" min="0" step="0.01" style="width: 100px;" />
+          </label>
+        </div>
+        
+        <!-- RPM Calculator Panel -->
+        <div style="margin-top: 16px; padding: 16px; background: color-mix(in oklab, var(--panel), black 8%); border-radius: 10px; border: 1px solid var(--grid);">
+          <h4 style="color: var(--accent); margin: 0 0 12px 0; font-size: 15px;">🎯 Bit RPM Calculator</h4>
+          <p class="note" style="margin-bottom: 12px;">
+            <strong>Formula:</strong> Bit RPM = Surface RPM + Motor RPM &nbsp;|&nbsp; Motor RPM = Flow Rate × Speed Ratio
+          </p>
+          
+          <!-- Legend -->
+          <div style="display: flex; gap: 16px; margin-bottom: 12px; font-size: 12px;">
+            <span style="display: flex; align-items: center; gap: 4px;">
+              <span style="padding: 2px 6px; background: var(--accent); color: var(--bg); border-radius: 4px; font-weight: 600;">INPUT</span>
+              <span style="color: var(--muted);">= You enter</span>
+            </span>
+            <span style="display: flex; align-items: center; gap: 4px;">
+              <span style="padding: 2px 6px; background: var(--good); color: white; border-radius: 4px; font-weight: 600;">CALC</span>
+              <span style="color: var(--muted);">= Auto-calculated</span>
+            </span>
+          </div>
+          
+          <div class="controls" style="gap: 12px 20px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+            <!-- Target/Total Bit RPM -->
+            <div class="calc-field" data-field="target" style="display: flex; flex-direction: column; gap: 4px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-weight: 600; color: var(--good);">Target Bit RPM</span>
+                <span class="field-badge" id="badge-target" style="padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; display: none;"></span>
+              </div>
+              <input type="number" id="calcTargetBitRpm" placeholder="e.g., 180" min="0" step="1" style="width: 100%;" data-user-input="false" />
+            </div>
+            
+            <!-- Surface RPM -->
+            <div class="calc-field" data-field="surface" style="display: flex; flex-direction: column; gap: 4px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span>Surface RPM</span>
+                <span class="field-badge" id="badge-surface" style="padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; display: none;"></span>
+              </div>
+              <input type="number" id="calcSurfaceRpm" placeholder="e.g., 30" min="0" step="1" style="width: 100%;" data-user-input="false" />
+            </div>
+            
+            <!-- Motor RPM / Flow Rate Fields -->
+            <div style="display: flex; flex-direction: column; gap: 4px; grid-column: span 2;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <!-- Motor RPM -->
+                <div class="calc-field" data-field="motor" style="display: flex; flex-direction: column; gap: 4px;">
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <span id="label-motor">Motor RPM</span>
+                    <span class="field-badge" id="badge-motor" style="padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600;"></span>
+                  </div>
+                  <input type="number" id="calcMotorRpm" placeholder="e.g., 150" min="0" step="0.1" style="width: 100%;" data-user-input="false" />
+                </div>
+                
+                <!-- Flow Rate -->
+                <div class="calc-field" data-field="flow" style="display: flex; flex-direction: column; gap: 4px;">
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <span id="label-flow">Flow Rate (gpm)</span>
+                    <span class="field-badge" id="badge-flow" style="padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600;"></span>
+                  </div>
+                  <input type="number" id="calcFlowRate" placeholder="e.g., 300" min="0" step="1" style="width: 100%;" data-user-input="false" />
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Calculation Summary -->
+          <div id="motor-calc-summary" style="margin-top: 16px; padding: 12px; background: color-mix(in oklab, var(--good), transparent 85%); border: 1px solid color-mix(in oklab, var(--good), transparent 60%); border-radius: 8px; display: none;">
+            <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: center;">
+              <div style="text-align: center;">
+                <div style="font-size: 24px; font-weight: 700; color: var(--good);" id="summary-bit-rpm">—</div>
+                <div class="note">Total Bit RPM</div>
+              </div>
+              <div style="color: var(--muted); font-size: 20px;">=</div>
+              <div style="text-align: center;">
+                <div style="font-size: 18px; font-weight: 600; color: var(--text);" id="summary-surface-rpm">—</div>
+                <div class="note">Surface RPM</div>
+              </div>
+              <div style="color: var(--muted); font-size: 20px;">+</div>
+              <div style="text-align: center;">
+                <div style="font-size: 18px; font-weight: 600; color: var(--accent);" id="summary-motor-rpm">—</div>
+                <div class="note">Motor RPM</div>
+              </div>
+            </div>
+            <div style="margin-top: 12px; text-align: center; font-size: 13px; color: var(--muted);" id="summary-flow-info"></div>
+          </div>
+          
+          <!-- Quick Action Buttons -->
+          <div class="btns" style="margin-top: 12px;">
+            <button id="btn-apply-bit-rpm" style="background: var(--good); color: white; border-color: var(--good);" title="Use calculated Bit RPM for passive test">
+              Apply to Passive Test
+            </button>
+            <button id="btn-clear-motor-calc">Clear Calculator</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <hr class="section-divider" />
 
     <div id="passive-test" role="region" aria-labelledby="passive-title">
@@ -2829,6 +2942,272 @@ FinalRpm,
         } catch (e) {}
         // Initialize active summary
         updateActiveSummary();
+
+        // ===== MUD MOTOR CALCULATOR =====
+        const useMudMotorCheckbox = document.getElementById('useMudMotor');
+        const mudMotorControls = document.getElementById('mud-motor-controls');
+        const motorSpeedRatioInput = document.getElementById('motorSpeedRatio');
+        const calcTargetBitRpmInput = document.getElementById('calcTargetBitRpm');
+        const calcSurfaceRpmInput = document.getElementById('calcSurfaceRpm');
+        const calcMotorRpmInput = document.getElementById('calcMotorRpm');
+        const calcFlowRateInput = document.getElementById('calcFlowRate');
+        const motorCalcSummary = document.getElementById('motor-calc-summary');
+
+        // Toggle mud motor controls visibility
+        useMudMotorCheckbox.addEventListener('change', () => {
+          mudMotorControls.style.display = useMudMotorCheckbox.checked ? 'block' : 'none';
+          if (useMudMotorCheckbox.checked) {
+            motorSpeedRatioInput.focus();
+          }
+        });
+
+        // Track which field was last edited by user (determines INPUT vs CALC)
+        // 'lastInputField' tracks: 'surface', 'motor', or 'flow'
+        // Target Bit RPM is ALWAYS INPUT
+        let lastInputField = null;
+
+        // Update badge display for a field
+        function updateBadge(fieldName, isInput, show = true) {
+          const badge = document.getElementById(`badge-${fieldName}`);
+          if (!badge) return;
+          
+          if (!show) {
+            badge.style.display = 'none';
+            return;
+          }
+          
+          badge.style.display = 'inline';
+          if (isInput) {
+            badge.textContent = 'INPUT';
+            badge.style.background = 'var(--accent)';
+            badge.style.color = 'var(--bg)';
+          } else {
+            badge.textContent = 'CALC';
+            badge.style.background = 'var(--good)';
+            badge.style.color = 'white';
+          }
+        }
+
+        // Update input field styling based on user-input state
+        function updateInputStyle(input, isUserInput) {
+          if (isUserInput) {
+            input.style.borderColor = 'var(--accent)';
+            input.style.boxShadow = '0 0 0 2px color-mix(in oklab, var(--accent), transparent 80%)';
+          } else if (input.value) {
+            input.style.borderColor = 'var(--good)';
+            input.style.boxShadow = '0 0 0 2px color-mix(in oklab, var(--good), transparent 80%)';
+          } else {
+            input.style.borderColor = '';
+            input.style.boxShadow = '';
+          }
+        }
+
+        // Update all field badges and styles based on lastInputField
+        function updateAllBadges() {
+          const hasTarget = calcTargetBitRpmInput.value !== '';
+          const hasSurface = calcSurfaceRpmInput.value !== '';
+          const hasMotor = calcMotorRpmInput.value !== '';
+          const hasFlow = calcFlowRateInput.value !== '';
+
+          // Target Bit RPM is ALWAYS INPUT
+          updateBadge('target', true, hasTarget);
+          updateInputStyle(calcTargetBitRpmInput, hasTarget);
+
+          // Surface, Motor, Flow badges based on lastInputField
+          if (lastInputField === 'surface') {
+            // User entered Surface RPM - both Motor and Flow are CALC
+            updateBadge('surface', true, hasSurface);
+            updateInputStyle(calcSurfaceRpmInput, hasSurface);
+            updateBadge('motor', false, hasMotor);
+            updateInputStyle(calcMotorRpmInput, false);
+            updateBadge('flow', false, hasFlow);
+            updateInputStyle(calcFlowRateInput, false);
+          } else if (lastInputField === 'motor') {
+            // User entered Motor RPM - Surface and Flow are CALC
+            updateBadge('surface', false, hasSurface);
+            updateInputStyle(calcSurfaceRpmInput, false);
+            updateBadge('motor', true, hasMotor);
+            updateInputStyle(calcMotorRpmInput, hasMotor);
+            updateBadge('flow', false, hasFlow);
+            updateInputStyle(calcFlowRateInput, false);
+          } else if (lastInputField === 'flow') {
+            // User entered Flow Rate - Surface and Motor are CALC
+            updateBadge('surface', false, hasSurface);
+            updateInputStyle(calcSurfaceRpmInput, false);
+            updateBadge('motor', false, hasMotor);
+            updateInputStyle(calcMotorRpmInput, false);
+            updateBadge('flow', true, hasFlow);
+            updateInputStyle(calcFlowRateInput, hasFlow);
+          } else {
+            // No secondary input yet - hide badges for non-target fields
+            updateBadge('surface', false, false);
+            updateInputStyle(calcSurfaceRpmInput, false);
+            updateBadge('motor', false, false);
+            updateInputStyle(calcMotorRpmInput, false);
+            updateBadge('flow', false, false);
+            updateInputStyle(calcFlowRateInput, false);
+          }
+        }
+
+        // Smart calculation logic
+        function calculateMotorValues() {
+          const speedRatio = parseFloat(motorSpeedRatioInput.value) || 0;
+          const targetBitRpm = parseFloat(calcTargetBitRpmInput.value);
+          const surfaceRpm = parseFloat(calcSurfaceRpmInput.value);
+          const motorRpm = parseFloat(calcMotorRpmInput.value);
+          const flowRate = parseFloat(calcFlowRateInput.value);
+
+          const hasSpeedRatio = speedRatio > 0;
+          const hasTarget = Number.isFinite(targetBitRpm) && targetBitRpm > 0;
+          const hasSurface = Number.isFinite(surfaceRpm) && surfaceRpm >= 0;
+          const hasMotor = Number.isFinite(motorRpm) && motorRpm >= 0;
+          const hasFlow = Number.isFinite(flowRate) && flowRate >= 0;
+
+          let computedBitRpm = null;
+          let computedSurfaceRpm = null;
+          let computedMotorRpm = null;
+          let computedFlowRate = null;
+
+          // Case 1: User entered Surface RPM - calculate Motor RPM and Flow Rate from Target
+          if (lastInputField === 'surface' && hasTarget && hasSurface) {
+            computedBitRpm = targetBitRpm;
+            computedSurfaceRpm = surfaceRpm;
+            computedMotorRpm = Math.max(0, targetBitRpm - surfaceRpm);
+            
+            calcMotorRpmInput.value = computedMotorRpm.toFixed(1);
+            
+            if (hasSpeedRatio && computedMotorRpm > 0) {
+              computedFlowRate = computedMotorRpm / speedRatio;
+              calcFlowRateInput.value = Math.round(computedFlowRate);
+            }
+          }
+          // Case 2: User entered Motor RPM - calculate Surface RPM (and Flow Rate from Motor RPM)
+          else if (lastInputField === 'motor' && hasTarget && hasMotor) {
+            computedBitRpm = targetBitRpm;
+            computedMotorRpm = motorRpm;
+            computedSurfaceRpm = Math.max(0, targetBitRpm - motorRpm);
+            
+            calcSurfaceRpmInput.value = Math.round(computedSurfaceRpm);
+            
+            if (hasSpeedRatio && computedMotorRpm > 0) {
+              computedFlowRate = computedMotorRpm / speedRatio;
+              calcFlowRateInput.value = Math.round(computedFlowRate);
+            }
+          }
+          // Case 3: User entered Flow Rate - calculate Motor RPM, then Surface RPM
+          else if (lastInputField === 'flow' && hasTarget && hasFlow && hasSpeedRatio) {
+            computedBitRpm = targetBitRpm;
+            computedFlowRate = flowRate;
+            computedMotorRpm = flowRate * speedRatio;
+            computedSurfaceRpm = Math.max(0, targetBitRpm - computedMotorRpm);
+            
+            calcMotorRpmInput.value = computedMotorRpm.toFixed(1);
+            calcSurfaceRpmInput.value = Math.round(computedSurfaceRpm);
+          }
+
+          // Update all badges
+          updateAllBadges();
+
+          // Update summary display
+          if (computedBitRpm !== null && computedSurfaceRpm !== null && computedMotorRpm !== null) {
+            document.getElementById('summary-bit-rpm').textContent = Math.round(computedBitRpm);
+            document.getElementById('summary-surface-rpm').textContent = Math.round(computedSurfaceRpm);
+            document.getElementById('summary-motor-rpm').textContent = computedMotorRpm.toFixed(1);
+            
+            const flowInfo = document.getElementById('summary-flow-info');
+            if (computedFlowRate !== null && hasSpeedRatio) {
+              flowInfo.textContent = `Flow Rate: ${Math.round(computedFlowRate)} gpm × Speed Ratio: ${speedRatio} rev/gal = ${computedMotorRpm.toFixed(1)} Motor RPM`;
+            } else if (hasSpeedRatio) {
+              flowInfo.textContent = `Speed Ratio: ${speedRatio} rev/gal`;
+            } else {
+              flowInfo.textContent = 'Enter Speed Ratio to calculate Flow Rate';
+            }
+            
+            motorCalcSummary.style.display = 'block';
+          } else {
+            motorCalcSummary.style.display = 'none';
+          }
+        }
+
+        // Initialize badges
+        updateAllBadges();
+
+        // Add input event listeners with user-input tracking
+        calcTargetBitRpmInput.addEventListener('input', () => {
+          // Target change triggers recalculation but doesn't change lastInputField
+          calculateMotorValues();
+        });
+        
+        calcSurfaceRpmInput.addEventListener('input', () => {
+          lastInputField = 'surface';
+          calculateMotorValues();
+        });
+        
+        calcMotorRpmInput.addEventListener('input', () => {
+          lastInputField = 'motor';
+          calculateMotorValues();
+        });
+        
+        calcFlowRateInput.addEventListener('input', () => {
+          lastInputField = 'flow';
+          calculateMotorValues();
+        });
+        
+        motorSpeedRatioInput.addEventListener('input', () => {
+          calculateMotorValues();
+        });
+
+        // Clear calculator button
+        document.getElementById('btn-clear-motor-calc').addEventListener('click', () => {
+          calcTargetBitRpmInput.value = '';
+          calcSurfaceRpmInput.value = '';
+          calcMotorRpmInput.value = '';
+          calcFlowRateInput.value = '';
+          motorCalcSummary.style.display = 'none';
+          
+          // Reset input state
+          lastInputField = null;
+          
+          // Reset styles
+          updateAllBadges();
+        });
+
+        // Apply to Passive Test button
+        document.getElementById('btn-apply-bit-rpm').addEventListener('click', () => {
+          const targetRpmText = document.getElementById('summary-bit-rpm').textContent;
+          const targetRpm = parseInt(targetRpmText);
+          
+          if (!Number.isFinite(targetRpm) || targetRpm <= 0) {
+            setAddMsg('⚠ Calculate a valid Bit RPM first', 3000);
+            return;
+          }
+          
+          // Check if RPM already exists
+          if (rpmWobs.has(targetRpm)) {
+            setAddMsg(`✓ ${targetRpm} RPM already exists in table`, 3000);
+            return;
+          }
+          
+          // Add the RPM column
+          const wobs = allowedWobsForRpm(targetRpm);
+          if (wobs.length === 0) {
+            setAddMsg(`⚠ ${targetRpm} RPM violates WOB×RPM < 9000 constraint`, 3000);
+            return;
+          }
+          
+          const snapshot = captureInputState();
+          rpmWobs.set(targetRpm, wobs);
+          renderHeaders();
+          renderInputTable();
+          renderCalcTable();
+          restoreInputState(filterSnapshot(snapshot, rpmWobs));
+          recalc();
+          
+          // Also populate the newRpm input for reference
+          document.getElementById('newRpm').value = targetRpm;
+          
+          setAddMsg(`✓ Added ${targetRpm} RPM column from calculator`, 3000);
+        });
       })();
     </script>
   </body>
